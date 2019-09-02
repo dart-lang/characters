@@ -9,23 +9,6 @@ import "grapheme_clusters/breaks.dart";
 
 part "characters_impl.dart";
 
-/// The character boundaries in [string].
-///
-/// The [start] and [end] must satisfy `0 <= start <= end <= string.length`.
-/// If [end] is omitted, it defaults to `string.length`.
-///
-/// Finds the boundaries between characters clusters after [start], and up to [end], in
-/// the string `string.substring(start, end)`. Always includes [start] and [end]
-/// unless `start == end`.
-/// Uses the Unicode extended grapheme cluster breaking algorithm.
-Iterable<int> CharacterBoundaries(String string,
-    [int start = 0, int end]) sync* {
-  end = RangeError.checkValidRange(start, end, string.length);
-  var breaks = Breaks(string, start, end, stateSoT);
-  int breakAt;
-  while ((breakAt = breaks.nextBreak()) >= 0) yield breakAt;
-}
-
 /// The characters of a string.
 ///
 /// A character is a Unicode Grapheme cluster represented
@@ -313,6 +296,23 @@ abstract class Characters implements Iterable<String> {
 ///
 /// Characters are Unicode grapheme clusters represented as substrings
 /// of the original string.
+/// 
+/// The [start] and [end] indices will iterate the grapheme cluster
+/// boundaries of the string while the [Character] is iterating the
+/// grapheme clusters. A string with *n* grapheme clusters will have
+/// *n + 1* boundaries (except when *n* is zero, then there are also
+/// zero boundaries). Those boundaries can be accessed as, for example:
+/// ```dart
+/// Iterable<int> graphemeClusterBoundaries(String string) sync* {
+///   if (string.isEmpty) return;
+///   var char = Characters(string).iterator;
+///   var hasNext = false;
+///   do {
+///     hasNext = char.moveNext();
+///     yield char.start;
+///   } while (hasNext);
+/// }
+/// ```
 abstract class Character implements BidirectionalIterator<String> {
   /// Creates a new character iterator iterating the character
   /// of [string].
