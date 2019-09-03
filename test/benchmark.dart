@@ -16,7 +16,7 @@ double bench(int Function() action, int ms) {
     count += action();
     elapsed = stopwatch.elapsedMilliseconds;
   } while (elapsed < ms);
-  return count/elapsed;
+  return count / elapsed;
 }
 
 int iterateIndicesOnly() {
