@@ -187,7 +187,8 @@ class _Characters extends Iterable<String> implements Characters {
       RangeError.checkValueInInterval(
           startIndex, 0, string.length, "startIndex");
     }
-    if (pattern.string.isEmpty) {
+    var patternString = pattern.string;
+    if (patternString.isEmpty) {
       if (string.isEmpty) return replacement;
       var replacementString = replacement.string;
       return Characters(
@@ -196,11 +197,11 @@ class _Characters extends Iterable<String> implements Characters {
     int start = startIndex;
     StringBuffer buffer;
     int next = -1;
-    while ((next = this.indexOf(pattern, start)) >= 0) {
+    while ((next = _indexOf(patternString, start)) >= 0) {
       (buffer ??= StringBuffer())
         ..write(string.substring(start, next))
         ..write(replacement);
-      start = next + pattern.string.length;
+      start = next + patternString.length;
     }
     if (buffer == null) return this;
     buffer.write(string.substring(start));
@@ -225,16 +226,16 @@ class _Characters extends Iterable<String> implements Characters {
     return buffer.toString();
   }
 
-  Characters replaceFirst(Characters source, Characters replacement,
+  Characters replaceFirst(Characters pattern, Characters replacement,
       [int startIndex = 0]) {
     if (startIndex != 0) {
       RangeError.checkValueInInterval(
           startIndex, 0, string.length, "startIndex");
     }
-    int index = _indexOf(source.string, startIndex);
+    int index = _indexOf(pattern.string, startIndex);
     if (index < 0) return this;
     return Characters(string.replaceRange(
-        index, index + source.string.length, replacement.string));
+        index, index + pattern.string.length, replacement.string));
   }
 
   bool containsAll(Characters other) {
