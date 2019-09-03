@@ -296,7 +296,7 @@ abstract class Characters implements Iterable<String> {
 ///
 /// Characters are Unicode grapheme clusters represented as substrings
 /// of the original string.
-/// 
+///
 /// The [start] and [end] indices will iterate the grapheme cluster
 /// boundaries of the string while the [Character] is iterating the
 /// grapheme clusters. A string with *n* grapheme clusters will have
