@@ -51,9 +51,11 @@ int reverseStrings() {
 
 int replaceStrings() {
   int count = 0;
+  const language = "한글";
+  assert(language.length == 6);
   {
     var chars = Characters(hangul);
-    var replaced = chars.replaceAll(Characters("한국어"), Characters("Lang"));
+    var replaced = chars.replaceAll(Characters(language), Characters("Hangul!"));
     count += replaced.string.length - hangul.length;
   }
   {
