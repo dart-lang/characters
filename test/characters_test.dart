@@ -463,5 +463,82 @@ void testParts(
     expect(it.current, "$c");
     it.includePreviousWhile((x) => x != a.string);
     expect(it.current, "$b$c");
+
+    var cs2 = cs.replaceAll(c, gc(""));
+    var cs3 = cs.replaceFirst(c, gc(""));
+    var cs4 = cs.findFirst(c).replaceRange(gc(""));
+    var cse = gc("$a$b$d$e");
+    expect(cs2, cse);
+    expect(cs3, cse);
+    expect(cs4, cse);
+    var cs5 = cs4.replaceAll(a, c);
+    expect(cs5, gc("$c$b$d$e"));
+    var cs6 = cs5.replaceAll(gc(""), a);
+    expect(cs6, gc("$a$c$a$b$a$d$a$e$a"));
+    var cs7 = cs6.replaceFirst(b, a);
+    expect(cs7, gc("$a$c$a$a$a$d$a$e$a"));
+    var cs8 = cs7.replaceFirst(e, a);
+    expect(cs8, gc("$a$c$a$a$a$d$a$a$a"));
+    var cs9 = cs8.replaceAll(a + a, b);
+    expect(cs9, gc("$a$c$b$a$d$b$a"));
+    it = cs9.iterator;
+    it.moveNext(b + a);
+    expect("$b$a", it.current);
+    it.includeNext(b + a);
+    expect("$b$a$d$b$a", it.current);
+    var cs10 = it.replaceAll(b + a, e + e);
+    expect(cs10, gc("$a$c$e$e$d$e$e"));
+    var cs11 = it.replaceRange(e);
+    expect(cs11, gc("$a$c$e"));
+
+    expect(cs.startsWith(gc("")), true);
+    expect(cs.startsWith(a), true);
+    expect(cs.startsWith(a + b), true);
+    expect(cs.startsWith(gc("$a$b$c")), true);
+    expect(cs.startsWith(gc("$a$b$c$d")), true);
+    expect(cs.startsWith(gc("$a$b$c$d$e")), true);
+    expect(cs.startsWith(b), false);
+    expect(cs.startsWith(c), false);
+    expect(cs.startsWith(d), false);
+    expect(cs.startsWith(e), false);
+
+    expect(cs.endsWith(gc("")), true);
+    expect(cs.endsWith(e), true);
+    expect(cs.endsWith(d + e), true);
+    expect(cs.endsWith(gc("$c$d$e")), true);
+    expect(cs.endsWith(gc("$b$c$d$e")), true);
+    expect(cs.endsWith(gc("$a$b$c$d$e")), true);
+    expect(cs.endsWith(d), false);
+    expect(cs.endsWith(c), false);
+    expect(cs.endsWith(b), false);
+    expect(cs.endsWith(a), false);
+
+    it = cs.findFirst(b + c);
+    expect(it.startsWith(gc("")), true);
+    expect(it.startsWith(b), true);
+    expect(it.startsWith(b + c), true);
+    expect(it.startsWith(a + b + c), false);
+    expect(it.startsWith(b + c + d), false);
+    expect(it.startsWith(a), false);
+
+    expect(it.endsWith(gc("")), true);
+    expect(it.endsWith(c), true);
+    expect(it.endsWith(b + c), true);
+    expect(it.endsWith(a + b + c), false);
+    expect(it.endsWith(b + c + d), false);
+    expect(it.endsWith(d), false);
+
+    it.moveFirst(c);
+    expect(it.previousEndsWith(gc("")), true);
+    expect(it.previousEndsWith(b), true);
+    expect(it.previousEndsWith(a + b), true);
+    expect(it.previousEndsWith(a + b + c), false);
+    expect(it.previousEndsWith(a), false);
+
+    expect(it.nextStartsWith(gc("")), true);
+    expect(it.nextStartsWith(d), true);
+    expect(it.nextStartsWith(d + e), true);
+    expect(it.nextStartsWith(c + d + e), false);
+    expect(it.nextStartsWith(e), false);
   });
 }

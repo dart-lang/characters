@@ -24,6 +24,9 @@ class _Characters extends Iterable<String> implements Characters {
   CharacterRange get iteratorEnd =>
       _CharacterRange._(string, string.length, string.length, stateSoTNoBreak);
 
+  _CharacterRange get _rangeAll =>
+      _CharacterRange._(string, 0, string.length, stateSoTNoBreak);
+
   @override
   String get first => string.isEmpty
       ? throw StateError("No element")
@@ -72,7 +75,7 @@ class _Characters extends Iterable<String> implements Characters {
   @override
   String join([String separator = ""]) {
     if (separator == "") return string;
-    return _explodeReplace(separator, "", 0);
+    return _explodeReplace(string, 0, string.length, separator, "");
   }
 
   @override
@@ -113,53 +116,9 @@ class _Characters extends Iterable<String> implements Characters {
       int next = Breaks(other, 0, other.length, stateSoTNoBreak).nextBreak();
       if (next != other.length) return false;
       // [other] is single grapheme cluster.
-      return _indexOf(other, 0) >= 0;
+      return _CharacterRange(string)._indexOf(other, 0, string.length) >= 0;
     }
     return false;
-  }
-
-  /// Finds first occurrence of [otherString] at grapheme cluster boundaries.
-  ///
-  /// Only finds occurrences starting at or after [startIndex].
-  int _indexOf(String otherString, int startIndex) {
-    int otherLength = otherString.length;
-    if (otherLength == 0) {
-      return nextBreak(string, 0, string.length, startIndex);
-    }
-    int length = string.length;
-    while (startIndex + otherLength <= length) {
-      int matchIndex = string.indexOf(otherString, startIndex);
-      if (matchIndex < 0) return matchIndex;
-      if (isGraphemeClusterBoundary(string, 0, length, matchIndex) &&
-          isGraphemeClusterBoundary(
-              string, 0, length, matchIndex + otherLength)) {
-        return matchIndex;
-      }
-      startIndex = matchIndex + 1;
-    }
-    return -1;
-  }
-
-  /// Finds last occurrence of [otherString] at grapheme cluster boundaries.
-  ///
-  /// Starts searching backwards at [startIndex].
-  int _lastIndexOf(String otherString, int startIndex) {
-    int otherLength = otherString.length;
-    if (otherLength == 0) {
-      return previousBreak(string, 0, string.length, startIndex);
-    }
-    int length = string.length;
-    while (startIndex >= 0) {
-      int matchIndex = string.lastIndexOf(otherString, startIndex);
-      if (matchIndex < 0) return matchIndex;
-      if (isGraphemeClusterBoundary(string, 0, length, matchIndex) &&
-          isGraphemeClusterBoundary(
-              string, 0, length, matchIndex + otherLength)) {
-        return matchIndex;
-      }
-      startIndex = matchIndex - 1;
-    }
-    return -1;
   }
 
   @override
@@ -184,59 +143,19 @@ class _Characters extends Iterable<String> implements Characters {
   }
 
   @override
-  Characters replaceAll(Characters pattern, Characters replacement) {
-    if (pattern.string.isEmpty) {
-      if (string.isEmpty) return replacement;
-      var replacementString = replacement.string;
-      return Characters(
-          _explodeReplace(replacementString, replacementString, 0));
-    }
-    int start = 0;
-    StringBuffer buffer;
-    int next = -1;
-    String patternString = pattern.string;
-    while ((next = this._indexOf(patternString, start)) >= 0) {
-      (buffer ??= StringBuffer())
-        ..write(string.substring(start, next))
-        ..write(replacement);
-      start = next + patternString.length;
-    }
-    if (buffer == null) return this;
-    buffer.write(string.substring(start));
-    return Characters(buffer.toString());
-  }
-
-  // Replaces every internal grapheme cluster boundary with
-  // [internalReplacement] and adds [outerReplacement] at both ends
-  // Starts at [startIndex].
-  String _explodeReplace(
-      String internalReplacement, String outerReplacement, int startIndex) {
-    var buffer = StringBuffer(string.substring(0, startIndex));
-    var breaks = Breaks(string, startIndex, string.length, stateSoTNoBreak);
-    int index = 0;
-    String replacement = outerReplacement;
-    while ((index = breaks.nextBreak()) >= 0) {
-      buffer..write(replacement)..write(string.substring(startIndex, index));
-      startIndex = index;
-      replacement = internalReplacement;
-    }
-    buffer.write(outerReplacement);
-    return buffer.toString();
-  }
+  Characters replaceAll(Characters pattern, Characters replacement) =>
+    _rangeAll.replaceAll(pattern, replacement);
 
   @override
   Characters replaceFirst(Characters pattern, Characters replacement) {
-    String patternString = pattern.string;
-    int index = _indexOf(patternString, 0);
-    if (index < 0) return this;
-    return Characters(string.replaceRange(
-        index, index + patternString.length, replacement.string));
+    var range = _rangeAll;
+    if (!range.moveFirst(pattern)) return this;
+    return range.replaceRange(replacement);
   }
 
   @override
-  bool containsAll(Characters other) {
-    return _indexOf(other.string, 0) >= 0;
-  }
+  bool containsAll(Characters other) =>
+      _rangeAll._indexOf(other.string, 0, string.length) >= 0;
 
   @override
   Characters skip(int count) {
@@ -414,14 +333,14 @@ class _Characters extends Iterable<String> implements Characters {
 
   @override
   CharacterRange findFirst(Characters characters) {
-    var range = _CharacterRange._(string, 0, string.length, stateSoTNoBreak);
+    var range = _rangeAll;
     if (range.moveFirst(characters)) return range;
     return null;
   }
 
   @override
   CharacterRange findLast(Characters characters) {
-    var range = _CharacterRange._(string, 0, string.length, stateSoTNoBreak);
+    var range = _rangeAll;
     if (range.moveLast(characters)) return range;
     return null;
   }
@@ -434,47 +353,101 @@ class _CharacterRange implements CharacterRange {
   static const int _cursorDeltaMask = 0x03;
 
   final String _string;
+
+  /// Start index of range in string. Always a grapheme cluster boundary.
   int _start;
+
+  /// End index of range in string. Always a grapheme cluster boundary.
   int _end;
-  // Encodes current state,
-  // whether we are moving forwards or backwards ([_directionMask]),
-  // and how far ahead the cursor is from the start/end ([_cursorDeltaMask]).
+
+  /// Encodes current state of a grapheme cluster breaking state machine.
+  /// Also whether we are moving forwards or backwards ([_directionMask]),
+  /// and how far ahead the cursor is from the start/end ([_cursorDeltaMask]).
   int _state;
-  // The [current] value is created lazily and cached to avoid repeated
-  // or unnecessary string allocation.
+
+  /// The [current] value is created lazily and cached to avoid repeated
+  /// or unnecessary string allocation.
   String _currentCache;
 
   _CharacterRange(String string) : this._(string, 0, 0, stateSoTNoBreak);
   _CharacterRange._(this._string, this._start, this._end, this._state);
 
-  @override
-  String get current =>
-      _currentCache ??= (_start == _end ? "" : _string.substring(_start, _end));
+  /// Changes the current range.
+  ///
+  /// Resets all cached state.
+  void _move(int start, int end) {
+    _start = start;
+    _end = end;
+    _currentCache = null;
+    _state = stateSoTNoBreak;
+  }
 
-  @override
-  bool moveNext([Characters pattern]) {
-    if (pattern == null) {
-      int state = _state;
-      int cursor = _end;
-      if (state & _directionMask != _directionForward) {
-        state = stateSoTNoBreak;
-      } else {
-        cursor += state & _cursorDeltaMask;
-      }
-      var breaks = Breaks(_string, cursor, _string.length, state);
-      var next = breaks.nextBreak();
-      _currentCache = null;
-      _start = _end;
-      if (next >= 0) {
-        _end = next;
-        _state =
-            (breaks.state & 0xF0) | _directionForward | (breaks.cursor - next);
-        return true;
-      }
-      _state = stateEoTNoBreak | _directionBackward;
-      return false;
+  /// Advances the [_end] position to the next grapheme cluster break.
+  ///
+  /// Uses information stored in [_state] for cases where the next character
+  /// has already been seen, and updates the [_state] with any seen look-ahead.
+  ///
+  /// Returns `true` if there was a next grapheme cluster, `false` if not.
+  bool _advanceEnd() {
+    var breaks = _breaksFromEnd();
+    var next = breaks.nextBreak();
+    if (next >= 0) {
+      _end = next;
+      _state =
+          (breaks.state & 0xF0) | _directionForward | (breaks.cursor - next);
+      return true;
     }
-    return _moveNext(pattern);
+    _state = stateEoTNoBreak | _directionBackward;
+    return false;
+  }
+
+  /// Retracts the [_startnd] position to the previous grapheme cluster break.
+  ///
+  /// Uses information stored in [_state] for cases where the previous character
+  /// has already been seen, and updates the [_state] with any seen look-ahead.
+  ///
+  /// Returns `true` if there was a previous grapheme cluster, `false` if not.
+  bool _retractStart() {
+    var breaks = _backBreaksFromStart();
+    var next = breaks.nextBreak();
+    if (next >= 0) {
+      _start = next;
+      _state =
+          (breaks.state & 0xF0) | _directionBackward | (next - breaks.cursor);
+      return true;
+    }
+    _state = stateSoTNoBreak | _directionForward;
+    return false;
+  }
+
+  /// Creates a [Breaks] from [_end] to `_string.length`.
+  ///
+  /// Uses information stored in [_state] for cases where the next
+  /// character has already been seen.
+  Breaks _breaksFromEnd() {
+    int state = _state;
+    int cursor = _end;
+    if (state & _directionMask != _directionForward) {
+      state = stateSoTNoBreak;
+    } else {
+      cursor += state & _cursorDeltaMask;
+    }
+    return Breaks(_string, cursor, _string.length, state);
+  }
+
+  /// Creates a [Breaks] from string start to [_start].
+  ///
+  /// Uses information stored in [_state] for cases where the previous
+  /// character has already been seen.
+  BackBreaks _backBreaksFromStart() {
+    int state = _state;
+    int cursor = _start;
+    if (state & _directionMask == _directionForward) {
+      state = stateEoTNoBreak;
+    } else {
+      cursor -= state & _cursorDeltaMask;
+    }
+    return BackBreaks(_string, cursor, 0, state);
   }
 
   /// Finds [pattern] in the range from [start] to [end].
@@ -482,12 +455,14 @@ class _CharacterRange implements CharacterRange {
   /// Both [start] and [end] are grapheme cluster boundaries in the
   /// [_string] string.
   int _indexOf(String pattern, int start, int end) {
+    if (pattern.isEmpty) return start;
     var breaks = Breaks(_string, start, end, stateSoT);
     int index = 0;
-    while ((index = breaks.nextBreak()) >= 0 && index + pattern.length <= end) {
+    while ((index = breaks.nextBreak()) >= 0) {
+      int endIndex = index + pattern.length;
+      if (endIndex > end) break;
       if (_string.startsWith(pattern, index) &&
-          isGraphemeClusterBoundary(
-              _string, start, end, index + pattern.length)) {
+          isGraphemeClusterBoundary(_string, start, end, endIndex)) {
         return index;
       }
     }
@@ -512,17 +487,22 @@ class _CharacterRange implements CharacterRange {
     return -1;
   }
 
-  // Changes the current range.
-  void _move(int start, int end) {
-    _start = start;
-    _end = end;
-    _currentCache = null;
-    _state = stateSoTNoBreak;
+  @override
+  String get current =>
+      _currentCache ??= (_start == _end ? "" : _string.substring(_start, _end));
+
+  @override
+  bool moveNext([Characters pattern]) {
+    if (pattern == null) {
+      _start = _end;
+      _currentCache = null;
+      return _advanceEnd();
+    }
+    return _moveNextPattern(pattern.string, _end, _string.length);
   }
 
-  bool _moveNext(Characters pattern) {
-    var patternString = pattern.string;
-    int offset = _indexOf(patternString, _end, _string.length);
+  bool _moveNextPattern(String patternString, int start, int end) {
+    int offset = _indexOf(patternString, start, end);
     if (offset >= 0) {
       _move(offset, offset + patternString.length);
       return true;
@@ -532,32 +512,15 @@ class _CharacterRange implements CharacterRange {
 
   bool movePrevious([Characters pattern]) {
     if (pattern == null) {
-      int state = _state;
-      int cursor = _start;
-      if (state & _directionMask == _directionForward) {
-        state = stateEoTNoBreak;
-      } else {
-        cursor -= state & _cursorDeltaMask;
-      }
-      var breaks = BackBreaks(_string, cursor, 0, state);
-      var next = breaks.nextBreak();
-      _currentCache = null;
       _end = _start;
-      if (next >= 0) {
-        _start = next;
-        _state =
-            (breaks.state & 0xF0) | _directionBackward | (next - breaks.cursor);
-        return true;
-      }
-      _state = stateSoTNoBreak | _directionForward;
-      return false;
+      _currentCache = null;
+      return _retractStart();
     }
-    return _movePrevious(pattern);
+    return _movePreviousPattern(pattern.string, 0, _start);
   }
 
-  bool _movePrevious(Characters pattern) {
-    var patternString = pattern.string;
-    int offset = _lastIndexOf(patternString, 0, _start);
+  bool _movePreviousPattern(String patternString, int start, int end) {
+    int offset = _lastIndexOf(patternString, start, end);
     if (offset >= 0) {
       _move(offset, offset + patternString.length);
       return true;
@@ -715,9 +678,8 @@ class _CharacterRange implements CharacterRange {
   @override
   bool includeNext([Characters target]) {
     if (target == null) {
-      if (_end == _string.length) return false;
-      _move(_start, nextBreak(_string, _start, _string.length, _end));
-      return true;
+      _currentCache = null;
+      return _advanceEnd();
     }
     String targetString = target.string;
     int index = _indexOf(targetString, _end, _string.length);
@@ -730,7 +692,7 @@ class _CharacterRange implements CharacterRange {
 
   @override
   void includeNextWhile(bool Function(String character) test) {
-    var breaks = Breaks(_string, _end, _string.length, stateSoTNoBreak);
+    var breaks = _breaksFromEnd();
     int cursor = _end;
     int next = 0;
     while ((next = breaks.nextBreak()) >= 0) {
@@ -746,9 +708,7 @@ class _CharacterRange implements CharacterRange {
   @override
   bool includePrevious([Characters target]) {
     if (target == null) {
-      if (_start == 0) return false;
-      _move(previousBreak(_string, 0, _end, _start), _end);
-      return true;
+      return _retractStart();
     }
     var targetString = target.string;
     int index = _lastIndexOf(targetString, 0, _start);
@@ -762,7 +722,7 @@ class _CharacterRange implements CharacterRange {
 
   @override
   void includePreviousWhile(bool Function(String character) test) {
-    var breaks = BackBreaks(_string, _start, 0, stateEoTNoBreak);
+    var breaks = _backBreaksFromStart();
     int cursor = _start;
     int next = 0;
     while ((next = breaks.nextBreak()) >= 0) {
@@ -805,34 +765,21 @@ class _CharacterRange implements CharacterRange {
 
   @override
   bool moveFirst([Characters target]) {
-    if (_start == _end) return false;
     if (target == null) {
-      _move(_start, nextBreak(_string, _start, _end, _start + 1));
+      _move(_start, Breaks(_string, _start, _end, stateSoTNoBreak).nextBreak());
       return true;
     }
-    var targetString = target.string;
-    int index = _indexOf(targetString, _start, _end);
-    if (index >= 0) {
-      _move(index, index + targetString.length);
-      return true;
-    }
-    return false;
+    return _moveNextPattern(target.string, _start, _end);
   }
 
   @override
   bool moveLast([Characters target]) {
-    if (_start == _end) return false;
     if (target == null) {
+      if (_start == _end) return false;
       _move(previousBreak(_string, _start, _end, _end - 1), _end);
       return true;
     }
-    var targetString = target.string;
-    int index = _lastIndexOf(targetString, _start, _end);
-    if (index >= 0) {
-      _move(index, index + targetString.length);
-      return true;
-    }
-    return false;
+    return _movePreviousPattern(target.string, _start, _end);
   }
 
   @override
@@ -847,13 +794,29 @@ class _CharacterRange implements CharacterRange {
   }
 
   @override
-  Characters replaceAll(Characters pattern, Characters replacement) {
-    if (_start == _end) return Characters(_string);
-    var patternString = pattern.string;
+  Characters replaceFirst(Characters pattern, Characters replacement) {
+    String patternString = pattern.string;
+    String replacementString = replacement.string;
     if (patternString.isEmpty) {
-      // Explode.
+      return _Characters(_string.replaceRange(_start, _start, replacementString));
     }
+    int index = _indexOf(patternString, _start, _end);
+    String result = _string;
+    if (index >= 0) {
+      result = _string.replaceRange(index, index + patternString.length, replacementString);
+    }
+    return _Characters(result);
+  }
+
+  @override
+  Characters replaceAll(Characters pattern, Characters replacement) {
+    var patternString = pattern.string;
     var replacementString = replacement.string;
+    if (patternString.isEmpty) {
+      var replaced = _explodeReplace(_string, _start, _end, replacementString, replacementString);
+      return _Characters(replaced);
+    }
+    if (_start == _end) return Characters(_string);
     int start = 0;
     int cursor = _start;
     StringBuffer buffer;
@@ -876,6 +839,40 @@ class _CharacterRange implements CharacterRange {
 
   @override
   Characters get source => Characters(_string);
+
+  @override
+  bool endsWith(Characters characters) {
+    return _endsWith(_start, _end, characters.string);
+  }
+
+  @override
+  bool nextStartsWith(Characters characters) {
+    return _startsWith(_end, _string.length, characters.string);
+  }
+
+  @override
+  bool previousEndsWith(Characters characters) {
+    return _endsWith(0, _start, characters.string);
+  }
+
+  @override
+  bool startsWith(Characters characters) {
+    return _startsWith(_start, _end, characters.string);
+  }
+
+  bool _endsWith(int start, int end, String string) {
+    int length = string.length;
+    int stringStart = end - length;
+    return stringStart >= start && _string.startsWith(string, stringStart) &&
+     isGraphemeClusterBoundary(_string, start, end, stringStart);
+  }
+
+  bool _startsWith(int start, int end, String string) {
+    int length = string.length;
+    int stringEnd = start + length;
+    return stringEnd <= end && _string.startsWith(string, start) &&
+     isGraphemeClusterBoundary(_string, start, end, stringEnd);
+  }
 }
 
 class _CodeUnits extends ListBase<int> {
@@ -901,3 +898,22 @@ class _CodeUnits extends ListBase<int> {
     throw UnsupportedError("Cannot modify an unmodifiable list");
   }
 }
+
+
+String _explodeReplace(String string, int start, int end,
+    String internalReplacement, String outerReplacement) {
+    if (start == end) {
+      return string.replaceRange(start, start, outerReplacement);
+    }
+    var buffer = StringBuffer(string.substring(0, start));
+    var breaks = Breaks(string, start, end, stateSoTNoBreak);
+    int index = 0;
+    String replacement = outerReplacement;
+    while ((index = breaks.nextBreak()) >= 0) {
+      buffer..write(replacement)..write(string.substring(start, index));
+      start = index;
+      replacement = internalReplacement;
+    }
+    buffer..write(outerReplacement)..write(string.substring(end));
+    return buffer.toString();
+  }

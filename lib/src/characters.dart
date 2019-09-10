@@ -512,4 +512,38 @@ abstract class CharacterRange implements BidirectionalIterator<String> {
   /// Returns [source] if there are no occurrences of [pattern]
   /// in the current range, otherwise returns a new [Characters] instance.
   Characters replaceAll(Characters pattern, Characters replacement);
+
+  /// Replaces the first occurrence of [pattern] with [replacement].
+  ///
+  /// Finds the first occurrence of [pattern] in the current range,
+  /// then replaces that occurrence with [replacement] and returns
+  /// the [Characters] of that string.
+  ///
+  /// If there is no first occurrence of [pattern], then the
+  /// characters of the source string is returned.
+  Characters replaceFirst(Characters pattern, Characters replacement);
+
+  /// Whether the current range starts with [characters].
+  ///
+  /// Returns `true` if the characters of the current range starts with
+  /// [characters], `false` if not.
+  bool startsWith(Characters characters);
+
+  /// Whether the current range ends with [characters].
+  ///
+  /// Returns `true` if the characters of the current range ends with
+  /// [characters], `false` if not.
+  bool endsWith(Characters characters);
+
+  /// Whether the current range is preceeded by [characters].
+  ///
+  /// Returns `true` if the previous characters immediately before the
+  /// current range ends with [characters].
+  bool nextStartsWith(Characters characters);
+
+  /// Whether the current range is followed by [characters].
+  ///
+  /// Returns `true` if the next characters immediately after the
+  /// current range starts with [characters].
+  bool previousEndsWith(Characters characters);
 }
