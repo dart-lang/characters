@@ -19,6 +19,11 @@ part "characters_impl.dart";
 /// and is known not to change, operations which select a subset of
 /// the elements can be computed eagerly, and in that case the
 /// operation returns a new `Characters` object.
+///
+/// The [iterator] provided by [Characters] is a [CharacterRange]
+/// which allows iterating the independent characters in both directions,
+/// but which also provides ways to select other ranges of characters
+/// in different ways.
 abstract class Characters implements Iterable<String> {
   /// Creates a [Characters] allowing iteration of
   /// the characters of [string].
@@ -27,16 +32,25 @@ abstract class Characters implements Iterable<String> {
   /// The string to iterate over.
   String get string;
 
-  /// A specialized character iterator.
+  /// Iterator over the characters of this string.
+  ///
+  /// Returns [CharacterRange] positioned before the first character
+  /// of this [Characters].
   ///
   /// Allows iterating the characters of [string] as a plain iterator,
+  /// using [CharacterRange.moveNext],
   /// as well as controlling the iteration in more detail.
   CharacterRange get iterator;
 
-  /// A specialized character iterator positioned at the end.
+  /// Iterator over the characters of this string.
   ///
-  /// Allows iterating the characters of [string] backwards from the end.
-  CharacterRange get iteratorEnd;
+  /// Returns [CharacterRange] positioned after the last character
+  /// of this [Characters].
+  ///
+  /// Allows iterating the characters of [string] backwards
+  /// using [CharacterRange.movePrevious],
+  /// as well as controlling the iteration in more detail.
+  CharacterRange get iteratorAtEnd;
 
   /// Whether [Character] is an element of this sequence of
   /// characters.
@@ -51,31 +65,32 @@ abstract class Characters implements Iterable<String> {
   /// as a subsequence.
   bool containsAll(Characters other);
 
-  /// Whether [other] is an initial subsequence of this sequence
-  /// of characters.
+  /// Whether this string starts with the characters of [other].
   ///
-  /// Returns `true` if [other] is a leading sub-sequence of this sequence of
-  /// characters.
+  /// Returns `true` if [other] the characters of [other]
+  /// are also the first characters of this string,
+  /// and `false` otherwise.
   bool startsWith(Characters other);
 
-  /// Whether [other] is an trailing subsequence of this sequence
-  /// of characters.
+  /// Whether this string ends with the characters of [other].
   ///
-  /// Returns `true` if [other] is a tailing sub-sequence of this sequence of
-  /// characters, and `false` otherwise.
+  /// Returns `true` if [other] the characters of [other]
+  /// are also the last characters of this string,
+  /// and `false` otherwise.
   bool endsWith(Characters other);
 
-  /// Finds the first occurrence of [characters].
+  /// Finds the first occurrence of [characters] in this string.
   ///
   /// Returns a [CharacterRange] containing the first occurrence of
-  /// [characters]. Returns `null` if there is no such occurrence,
-  CharacterRange findFirst(Characters characters);
+  /// [characters] in this string.
+  /// Returns `null` if there is no such occurrence.
+  CharacterRange/*?*/ findFirst(Characters characters);
 
   /// Finds the last occurrence of [characters].
   ///
   /// Returns a [CharacterRange] containing the last occurrence of
   /// [characters]. Returns `null` if there is no such occurrence,
-  CharacterRange findLast(Characters characters);
+  CharacterRange/*?*/ findLast(Characters characters);
 
   /// Eagerly selects a subset of the characters.
   ///
@@ -195,24 +210,33 @@ abstract class Characters implements Iterable<String> {
   String toString();
 }
 
-/// A sub-sequence of a [Characters].
+/// A range of characters of a [Characters].
 ///
-/// The sub-sequence is a range of consecutive characters in [source],
+/// A range of consecutive characters in [source],
 /// corresponding to a start and end position in the source sequence.
-/// The range may even be empty, but will still correspond to a position,
-/// only one where start and end is the same position.
+/// The range may even be empty, but that will still correspond to a position
+/// where both start and end happen to be the same position.
 ///
-/// The source sequence can be separated into the *previous* characters,
-/// those before the range, the range itself, and the *next* characters,
+/// The source sequence can be separated into the *preceeding* characters,
+/// those before the range, the range itself, and the *following* characters,
 /// those after the range.
 ///
-/// Inside the range, operations may look at the *first* characters of the
-/// range, those right after the range start,
-/// or the *last* characters of the range, those right before the range end.
+/// Some operations inspect or act on the characters of the current range,
+/// and other operations modify the range by moving the start and/or end
+/// position.
 ///
-/// The range of a [CharacterRange] can be updated to include more
-/// characters at either end, or to drop characters from either end,
-/// or to simply move to a completely new range.
+/// In general, an operation with a name starting with `move` will move
+/// both start and end positions, selecting an entirely new range
+/// which does not overlap the current range.
+/// Operations starting with `collapse` reduces the current range to
+/// a sub-range of itself.
+/// Operations starting with `expand` increase the current range
+/// by moving/ the end postion to a later position
+/// or the start position to an earlier position,
+/// and operations starting with `drop` reduce the current range
+/// by moving the start to a later position or the end to an earlier position,
+/// therebyt dropping characters from one or both ends from the current range.
+///
 ///
 /// The character range implements [Iterator]
 /// (actually an [BidirectionalIterator] of [String]).
@@ -252,41 +276,52 @@ abstract class CharacterRange implements BidirectionalIterator<String> {
   /// A non-empty range contains at least one character.
   bool get isNotEmpty;
 
-  /// Makes the range be next occurrence of [target] after the current range.
+  /// Moves the range to be the next [count] characters after the current range.
   ///
-  /// If [target] is omitted, the range becomes the next single character
-  /// after the current range, if any.
+  /// Moves the start position to the end of the current range and the
+  /// end position to the position after the [count]th following character,
+  /// or to the end of the string if there are fewer than [count] following
+  /// characters.
   ///
-  /// If [target] does not occur in the source sequence after the
-  /// current range, this operation collapses the range to the
-  /// end of the current range, as by [collapesEnd].
-  ///
-  /// Returns `true` if [target] was found and `false` if not.
-  bool moveNext([Characters target]);
+  /// Returns `true` if there were [count] following characters
+  /// and `false` if not.
+  bool moveNext([int count = 1]);
 
-  /// Makes the range be the characters up to the next occurrence of [target].
+  /// Moves the range to the next occurrence of [target] after the current range.
   ///
-  /// If there is an occurrence of [target] after the current range,
-  /// the new range starts at the end of the current range, and ends just
-  /// before the first such occurrence of [target].
+  /// If there is an occurrence of [target] in the characters following
+  /// the current range,
+  /// then the new range contains exactly the first such occurrence of [target].
   ///
   /// If there is no occurrence of [target] after the current range,
   /// the range is not modified.
   ///
   /// Returns `true` if the range is modified and `false` if not.
-  bool moveUntilNext(Characters target);
+  bool moveTo(Characters target);
 
-  /// Makes the range be previous occurrence of [target] before the current range.
+  /// Makes the range be the characters up to the next occurrence of [target].
   ///
-  /// If [target] is omitted, the range becomes the previous single character
-  /// before the current range, if any.
+  /// The new range starts at the end of the current range.
+  /// If there is an occurrence of [target] in the characters following
+  /// the current range,
+  /// then the new range ends just before the first such occurrence of [target],
+  /// otherwise it ends at the end of the string.
   ///
-  /// If [target] does not occur in the source sequence before the
-  /// current range, this operation collapses the range to the
-  /// start of the current range, as by [collapesStart].
+  /// Returns `true` if there was an occurrence of [target].
+  bool moveUntil(Characters target);
+
+  /// Makes the range be previous [count] characters before the current range.
   ///
-  /// Returns `true` if [target] was found and `false` if not.
-  bool movePrevious([Characters target]);
+  /// Moves the end position to the start of the current range and the
+  /// start position to the position to just before the [count]th preceding
+  /// character, or to the beginning of the string if there are fewer
+  /// than [count] preceding characters.
+  ///
+  /// Returns `true` if there were [count] preceding characters
+  /// and `false` if not.
+  bool movePrevious([int count]);
+
+  bool moveBackTo(Characters target);
 
   /// Makes the range be the characters after to the previous occurrence of [target].
   ///
@@ -298,7 +333,7 @@ abstract class CharacterRange implements BidirectionalIterator<String> {
   /// the range is not modified.
   ///
   /// Returns `true` if the range is modified and `false` if not.
-  bool moveAfterPrevious(Characters target);
+  bool moveBackUntil(Characters target);
 
   /// Collapses the range to its start.
   ///
