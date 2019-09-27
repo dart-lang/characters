@@ -7,7 +7,7 @@ part of "characters.dart";
 /// The grapheme clusters of a string.
 class _Characters extends Iterable<String> implements Characters {
   // Try to avoid allocating more empty grapheme clusters.
-  static const Characters _empty = const _Characters._("");
+  static const _Characters _empty = const _Characters._("");
 
   final String string;
 
