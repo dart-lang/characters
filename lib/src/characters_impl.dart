@@ -29,7 +29,8 @@ class StringCharacters extends Iterable<String> implements Characters {
   CharacterRange get iteratorAtEnd =>
       StringCharacterRange._(string, string.length, string.length);
 
-  StringCharacterRange get _rangeAll => StringCharacterRange._(string, 0, string.length);
+  StringCharacterRange get _rangeAll =>
+      StringCharacterRange._(string, 0, string.length);
 
   @override
   String get first => string.isEmpty
@@ -120,7 +121,8 @@ class StringCharacters extends Iterable<String> implements Characters {
       int next = Breaks(other, 0, other.length, stateSoTNoBreak).nextBreak();
       if (next != other.length) return false;
       // [other] is single grapheme cluster.
-      return StringCharacterRange(string)._indexOf(other, 0, string.length) >= 0;
+      return StringCharacterRange(string)._indexOf(other, 0, string.length) >=
+          0;
     }
     return false;
   }

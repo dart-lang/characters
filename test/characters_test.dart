@@ -395,7 +395,6 @@ void testParts(
     expect(it.current, "$a$b");
     expect(it.moveBack(), false);
 
-
     // moveFirst.
     it.expandAll();
     expect(it.current, "$a$b$c$d$e");
