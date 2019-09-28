@@ -2,7 +2,7 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-import "characters_impl.dart" as i;
+import "characters_impl.dart";
 
 /// The characters of a string.
 ///
@@ -22,7 +22,7 @@ import "characters_impl.dart" as i;
 abstract class Characters implements Iterable<String> {
   /// Creates a [Characters] allowing iteration of
   /// the characters of [string].
-  factory Characters(String string) = i.Characters;
+  factory Characters(String string) = StringCharacters;
 
   /// The string to iterate over.
   String get string;
@@ -239,7 +239,7 @@ abstract class Characters implements Iterable<String> {
 abstract class CharacterRange implements Iterator<String> {
   /// Creates a new character iterator iterating the character
   /// of [string].
-  factory CharacterRange(String string) = i.CharacterRange;
+  factory CharacterRange(String string) = StringCharacterRange;
 
   /// The character sequence that this range is a sub-sequence of.
   Characters get source;

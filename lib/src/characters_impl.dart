@@ -2,31 +2,34 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-import "dart:collection";
-import "characters.dart" as i;
+import "dart:collection" show ListBase;
+
+import "characters.dart";
 import "grapheme_clusters/constants.dart";
 import "grapheme_clusters/breaks.dart";
 
 /// The grapheme clusters of a string.
-class Characters extends Iterable<String> implements i.Characters {
+///
+/// Backed by a single string.
+class StringCharacters extends Iterable<String> implements Characters {
   // Try to avoid allocating more empty grapheme clusters.
-  static const Characters _empty = const Characters._("");
+  static const StringCharacters _empty = const StringCharacters._("");
 
   final String string;
 
-  const Characters._(this.string);
+  const StringCharacters._(this.string);
 
-  factory Characters(String string) =>
-      string.isEmpty ? _empty : Characters._(string);
-
-  @override
-  i.CharacterRange get iterator => CharacterRange._(string, 0, 0);
+  factory StringCharacters(String string) =>
+      string.isEmpty ? _empty : StringCharacters._(string);
 
   @override
-  i.CharacterRange get iteratorAtEnd =>
-      CharacterRange._(string, string.length, string.length);
+  CharacterRange get iterator => StringCharacterRange._(string, 0, 0);
 
-  CharacterRange get _rangeAll => CharacterRange._(string, 0, string.length);
+  @override
+  CharacterRange get iteratorAtEnd =>
+      StringCharacterRange._(string, string.length, string.length);
+
+  StringCharacterRange get _rangeAll => StringCharacterRange._(string, 0, string.length);
 
   @override
   String get first => string.isEmpty
@@ -117,13 +120,13 @@ class Characters extends Iterable<String> implements i.Characters {
       int next = Breaks(other, 0, other.length, stateSoTNoBreak).nextBreak();
       if (next != other.length) return false;
       // [other] is single grapheme cluster.
-      return CharacterRange(string)._indexOf(other, 0, string.length) >= 0;
+      return StringCharacterRange(string)._indexOf(other, 0, string.length) >= 0;
     }
     return false;
   }
 
   @override
-  bool startsWith(i.Characters other) {
+  bool startsWith(Characters other) {
     int length = string.length;
     String otherString = other.string;
     if (otherString.isEmpty) return true;
@@ -132,7 +135,7 @@ class Characters extends Iterable<String> implements i.Characters {
   }
 
   @override
-  bool endsWith(i.Characters other) {
+  bool endsWith(Characters other) {
     int length = string.length;
     String otherString = other.string;
     if (otherString.isEmpty) return true;
@@ -144,22 +147,22 @@ class Characters extends Iterable<String> implements i.Characters {
   }
 
   @override
-  i.Characters replaceAll(i.Characters pattern, i.Characters replacement) =>
+  Characters replaceAll(Characters pattern, Characters replacement) =>
       _rangeAll.replaceAll(pattern, replacement);
 
   @override
-  i.Characters replaceFirst(i.Characters pattern, i.Characters replacement) {
+  Characters replaceFirst(Characters pattern, Characters replacement) {
     var range = _rangeAll;
     if (!range.collapseToFirst(pattern)) return this;
     return range.replaceRange(replacement);
   }
 
   @override
-  bool containsAll(i.Characters other) =>
+  bool containsAll(Characters other) =>
       _rangeAll._indexOf(other.string, 0, string.length) >= 0;
 
   @override
-  i.Characters skip(int count) {
+  Characters skip(int count) {
     RangeError.checkNotNegative(count, "count");
     if (count == 0) return this;
     if (string.isNotEmpty) {
@@ -174,13 +177,13 @@ class Characters extends Iterable<String> implements i.Characters {
           return _empty;
         }
       }
-      return Characters(string.substring(startIndex));
+      return StringCharacters(string.substring(startIndex));
     }
     return this;
   }
 
   @override
-  i.Characters take(int count) {
+  Characters take(int count) {
     RangeError.checkNotNegative(count, "count");
     if (count == 0) return _empty;
     if (string.isNotEmpty) {
@@ -195,13 +198,13 @@ class Characters extends Iterable<String> implements i.Characters {
           return this;
         }
       }
-      return Characters._(string.substring(0, endIndex));
+      return StringCharacters._(string.substring(0, endIndex));
     }
     return this;
   }
 
   @override
-  i.Characters skipWhile(bool Function(String) test) {
+  Characters skipWhile(bool Function(String) test) {
     if (string.isNotEmpty) {
       var breaks = Breaks(string, 0, string.length, stateSoTNoBreak);
       int index = 0;
@@ -209,7 +212,7 @@ class Characters extends Iterable<String> implements i.Characters {
       while ((index = breaks.nextBreak()) >= 0) {
         if (!test(string.substring(startIndex, index))) {
           if (startIndex == 0) return this;
-          return Characters._(string.substring(startIndex));
+          return StringCharacters._(string.substring(startIndex));
         }
         startIndex = index;
       }
@@ -218,7 +221,7 @@ class Characters extends Iterable<String> implements i.Characters {
   }
 
   @override
-  i.Characters takeWhile(bool Function(String) test) {
+  Characters takeWhile(bool Function(String) test) {
     if (string.isNotEmpty) {
       var breaks = Breaks(string, 0, string.length, stateSoTNoBreak);
       int index = 0;
@@ -226,7 +229,7 @@ class Characters extends Iterable<String> implements i.Characters {
       while ((index = breaks.nextBreak()) >= 0) {
         if (!test(string.substring(endIndex, index))) {
           if (endIndex == 0) return _empty;
-          return Characters._(string.substring(0, endIndex));
+          return StringCharacters._(string.substring(0, endIndex));
         }
         endIndex = index;
       }
@@ -235,15 +238,15 @@ class Characters extends Iterable<String> implements i.Characters {
   }
 
   @override
-  i.Characters where(bool Function(String) test) =>
-      Characters(super.where(test).join());
+  Characters where(bool Function(String) test) =>
+      StringCharacters(super.where(test).join());
 
   @override
-  i.Characters operator +(i.Characters other) =>
-      Characters(string + other.string);
+  Characters operator +(Characters other) =>
+      StringCharacters(string + other.string);
 
   @override
-  i.Characters skipLast(int count) {
+  Characters skipLast(int count) {
     RangeError.checkNotNegative(count, "count");
     if (count == 0) return this;
     if (string.isNotEmpty) {
@@ -258,13 +261,13 @@ class Characters extends Iterable<String> implements i.Characters {
           return _empty;
         }
       }
-      return Characters(string.substring(0, endIndex));
+      return StringCharacters(string.substring(0, endIndex));
     }
     return _empty;
   }
 
   @override
-  i.Characters skipLastWhile(bool Function(String) test) {
+  Characters skipLastWhile(bool Function(String) test) {
     if (string.isNotEmpty) {
       var breaks = BackBreaks(string, string.length, 0, stateEoTNoBreak);
       int index = 0;
@@ -272,7 +275,7 @@ class Characters extends Iterable<String> implements i.Characters {
       while ((index = breaks.nextBreak()) >= 0) {
         if (!test(string.substring(index, end))) {
           if (end == string.length) return this;
-          return Characters(string.substring(0, end));
+          return StringCharacters(string.substring(0, end));
         }
         end = index;
       }
@@ -281,7 +284,7 @@ class Characters extends Iterable<String> implements i.Characters {
   }
 
   @override
-  i.Characters takeLast(int count) {
+  Characters takeLast(int count) {
     RangeError.checkNotNegative(count, "count");
     if (count == 0) return this;
     if (string.isNotEmpty) {
@@ -296,20 +299,20 @@ class Characters extends Iterable<String> implements i.Characters {
           return this;
         }
       }
-      return Characters(string.substring(startIndex));
+      return StringCharacters(string.substring(startIndex));
     }
     return this;
   }
 
   @override
-  i.Characters takeLastWhile(bool Function(String) test) {
+  Characters takeLastWhile(bool Function(String) test) {
     if (string.isNotEmpty) {
       var breaks = BackBreaks(string, string.length, 0, stateEoTNoBreak);
       int index = 0;
       int start = string.length;
       while ((index = breaks.nextBreak()) >= 0) {
         if (!test(string.substring(index, start))) {
-          return Characters(string.substring(start));
+          return StringCharacters(string.substring(start));
         }
         start = index;
       }
@@ -318,14 +321,14 @@ class Characters extends Iterable<String> implements i.Characters {
   }
 
   @override
-  i.Characters toLowerCase() => Characters(string.toLowerCase());
+  Characters toLowerCase() => StringCharacters(string.toLowerCase());
 
   @override
-  i.Characters toUpperCase() => Characters(string.toUpperCase());
+  Characters toUpperCase() => StringCharacters(string.toUpperCase());
 
   @override
   bool operator ==(Object other) =>
-      other is i.Characters && string == other.string;
+      other is Characters && string == other.string;
 
   @override
   int get hashCode => string.hashCode;
@@ -334,21 +337,22 @@ class Characters extends Iterable<String> implements i.Characters {
   String toString() => string;
 
   @override
-  i.CharacterRange findFirst(i.Characters characters) {
+  CharacterRange findFirst(Characters characters) {
     var range = _rangeAll;
     if (range.collapseToFirst(characters)) return range;
     return null;
   }
 
   @override
-  i.CharacterRange findLast(i.Characters characters) {
+  CharacterRange findLast(Characters characters) {
     var range = _rangeAll;
     if (range.collapseToLast(characters)) return range;
     return null;
   }
 }
 
-class CharacterRange implements i.CharacterRange {
+/// A [CharacterRange] on a single string.
+class StringCharacterRange implements CharacterRange {
   /// The source string.
   final String _string;
 
@@ -368,8 +372,8 @@ class CharacterRange implements i.CharacterRange {
   /// or unnecessary string allocation.
   String _currentCache;
 
-  CharacterRange(String string) : this._(string, 0, 0);
-  CharacterRange._(this._string, this._start, this._end);
+  StringCharacterRange(String string) : this._(string, 0, 0);
+  StringCharacterRange._(this._string, this._start, this._end);
 
   /// Changes the current range.
   ///
@@ -551,8 +555,8 @@ class CharacterRange implements i.CharacterRange {
   Runes get runes => Runes(current);
 
   @override
-  i.CharacterRange copy() {
-    return CharacterRange._(_string, _start, _end);
+  CharacterRange copy() {
+    return StringCharacterRange._(_string, _start, _end);
   }
 
   @override
@@ -584,7 +588,7 @@ class CharacterRange implements i.CharacterRange {
   }
 
   @override
-  bool dropTo(i.Characters target) {
+  bool dropTo(Characters target) {
     if (_start == _end) return target.isEmpty;
     var targetString = target.string;
     var index = _indexOf(targetString, _start, _end);
@@ -596,7 +600,7 @@ class CharacterRange implements i.CharacterRange {
   }
 
   @override
-  bool dropUntil(i.Characters target) {
+  bool dropUntil(Characters target) {
     if (_start == _end) return target.isEmpty;
     var targetString = target.string;
     var index = _indexOf(targetString, _start, _end);
@@ -641,7 +645,7 @@ class CharacterRange implements i.CharacterRange {
   }
 
   @override
-  bool dropBackTo(i.Characters target) {
+  bool dropBackTo(Characters target) {
     if (_start == _end) return target.isEmpty;
     var targetString = target.string;
     var index = _lastIndexOf(targetString, _start, _end);
@@ -653,7 +657,7 @@ class CharacterRange implements i.CharacterRange {
   }
 
   @override
-  bool dropBackUntil(i.Characters target) {
+  bool dropBackUntil(Characters target) {
     if (_start == _end) return target.isEmpty;
     var targetString = target.string;
     var index = _lastIndexOf(targetString, _start, _end);
@@ -684,7 +688,7 @@ class CharacterRange implements i.CharacterRange {
   bool expandNext([int count = 1]) => _advanceEnd(count, _start);
 
   @override
-  bool expandTo(i.Characters target) {
+  bool expandTo(Characters target) {
     String targetString = target.string;
     int index = _indexOf(targetString, _end, _string.length);
     if (index >= 0) {
@@ -717,7 +721,7 @@ class CharacterRange implements i.CharacterRange {
   bool expandBack([int count = 1]) => _retractStart(count, _end);
 
   @override
-  bool expandBackTo(i.Characters target) {
+  bool expandBackTo(Characters target) {
     var targetString = target.string;
     int index = _lastIndexOf(targetString, 0, _start);
     if (index >= 0) {
@@ -743,7 +747,7 @@ class CharacterRange implements i.CharacterRange {
   }
 
   @override
-  bool expandBackUntil(i.Characters target) {
+  bool expandBackUntil(Characters target) {
     return _retractStartUntil(target.string, _end);
   }
 
@@ -753,7 +757,7 @@ class CharacterRange implements i.CharacterRange {
   }
 
   @override
-  bool expandUntil(i.Characters target) {
+  bool expandUntil(Characters target) {
     return _advanceEndUntil(target.string, _start);
   }
 
@@ -764,7 +768,7 @@ class CharacterRange implements i.CharacterRange {
   bool get isNotEmpty => _start != _end;
 
   @override
-  bool moveBackUntil(i.Characters target) {
+  bool moveBackUntil(Characters target) {
     var targetString = target.string;
     return _retractStartUntil(targetString, _start);
   }
@@ -780,17 +784,17 @@ class CharacterRange implements i.CharacterRange {
   }
 
   @override
-  bool collapseToFirst(i.Characters target) {
+  bool collapseToFirst(Characters target) {
     return _moveNextPattern(target.string, _start, _end);
   }
 
   @override
-  bool collapseToLast(i.Characters target) {
+  bool collapseToLast(Characters target) {
     return _movePreviousPattern(target.string, _start, _end);
   }
 
   @override
-  bool moveUntil(i.Characters target) {
+  bool moveUntil(Characters target) {
     var targetString = target.string;
     return _advanceEndUntil(targetString, _end);
   }
@@ -806,11 +810,11 @@ class CharacterRange implements i.CharacterRange {
   }
 
   @override
-  i.Characters replaceFirst(i.Characters pattern, i.Characters replacement) {
+  Characters replaceFirst(Characters pattern, Characters replacement) {
     String patternString = pattern.string;
     String replacementString = replacement.string;
     if (patternString.isEmpty) {
-      return Characters(
+      return StringCharacters(
           _string.replaceRange(_start, _start, replacementString));
     }
     int index = _indexOf(patternString, _start, _end);
@@ -819,19 +823,19 @@ class CharacterRange implements i.CharacterRange {
       result = _string.replaceRange(
           index, index + patternString.length, replacementString);
     }
-    return Characters(result);
+    return StringCharacters(result);
   }
 
   @override
-  i.Characters replaceAll(i.Characters pattern, i.Characters replacement) {
+  Characters replaceAll(Characters pattern, Characters replacement) {
     var patternString = pattern.string;
     var replacementString = replacement.string;
     if (patternString.isEmpty) {
       var replaced = _explodeReplace(
           _string, _start, _end, replacementString, replacementString);
-      return Characters(replaced);
+      return StringCharacters(replaced);
     }
-    if (_start == _end) return i.Characters(_string);
+    if (_start == _end) return Characters(_string);
     int start = 0;
     int cursor = _start;
     StringBuffer buffer;
@@ -842,36 +846,36 @@ class CharacterRange implements i.CharacterRange {
       cursor += patternString.length;
       start = cursor;
     }
-    if (buffer == null) return i.Characters(_string);
+    if (buffer == null) return Characters(_string);
     buffer.write(_string.substring(start));
-    return i.Characters(buffer.toString());
+    return Characters(buffer.toString());
   }
 
   @override
-  i.Characters replaceRange(i.Characters replacement) {
-    return i.Characters(_string.replaceRange(_start, _end, replacement.string));
+  Characters replaceRange(Characters replacement) {
+    return Characters(_string.replaceRange(_start, _end, replacement.string));
   }
 
   @override
-  i.Characters get source => i.Characters(_string);
+  Characters get source => Characters(_string);
 
   @override
-  bool startsWith(i.Characters characters) {
+  bool startsWith(Characters characters) {
     return _startsWith(_start, _end, characters.string);
   }
 
   @override
-  bool endsWith(i.Characters characters) {
+  bool endsWith(Characters characters) {
     return _endsWith(_start, _end, characters.string);
   }
 
   @override
-  bool isFollowedBy(i.Characters characters) {
+  bool isFollowedBy(Characters characters) {
     return _startsWith(_end, _string.length, characters.string);
   }
 
   @override
-  bool isPrecededBy(i.Characters characters) {
+  bool isPrecededBy(Characters characters) {
     return _endsWith(0, _start, characters.string);
   }
 
@@ -892,7 +896,7 @@ class CharacterRange implements i.CharacterRange {
   }
 
   @override
-  bool moveBackTo(i.Characters target) {
+  bool moveBackTo(Characters target) {
     var targetString = target.string;
     int index = _lastIndexOf(targetString, 0, _start);
     if (index >= 0) {
@@ -903,7 +907,7 @@ class CharacterRange implements i.CharacterRange {
   }
 
   @override
-  bool moveTo(i.Characters target) {
+  bool moveTo(Characters target) {
     var targetString = target.string;
     int index = _indexOf(targetString, _end, _string.length);
     if (index >= 0) {
