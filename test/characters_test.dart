@@ -45,15 +45,15 @@ void main([List<String> args]) {
       expect(cs.skipWhile((x) => x != " ").toString(), " $flag!");
       expect(cs.skipLastWhile((x) => x != " ").toString(), "Hi ");
 
-      expect(cs.findFirst(gc("")).movePrevious(), false);
+      expect(cs.findFirst(gc("")).moveBack(), false);
       expect(cs.findFirst(gc(flag)).current, flag);
       expect(cs.findLast(gc(flag)).current, flag);
       expect(cs.iterator.moveNext(), true);
-      expect(cs.iterator.movePrevious(), false);
+      expect(cs.iterator.moveBack(), false);
       expect((cs.iterator..moveNext()).current, "H");
-      expect(cs.iteratorEnd.moveNext(), false);
-      expect(cs.iteratorEnd.movePrevious(), true);
-      expect((cs.iteratorEnd..movePrevious()).current, "!");
+      expect(cs.iteratorAtEnd.moveNext(), false);
+      expect(cs.iteratorAtEnd.moveBack(), true);
+      expect((cs.iteratorAtEnd..moveBack()).current, "!");
     });
 
     testParts(gc("a"), gc("b"), gc("c"), gc("d"), gc("e"));
@@ -241,10 +241,10 @@ void expectGC(Characters actual, List<String> expected) {
   }
   expect(it.moveNext(), false);
   for (var i = expected.length - 1; i >= 0; i--) {
-    expect(it.movePrevious(), true);
+    expect(it.moveBack(), true);
     expect(it.current, expected[i]);
   }
-  expect(it.movePrevious(), false);
+  expect(it.moveBack(), false);
   expect(it.isEmpty, true);
 
   // GraphemeClusters operations.
@@ -276,7 +276,7 @@ void expectGC(Characters actual, List<String> expected) {
     int pos = -1;
     if (random.nextBool()) {
       pos = expected.length;
-      it = actual.iteratorEnd;
+      it = actual.iteratorAtEnd;
     }
     int steps = 5 + random.nextInt(expected.length * 2 + 1);
     bool lastMove = false;
@@ -296,7 +296,7 @@ void expectGC(Characters actual, List<String> expected) {
       }
       if (--steps < 0) break;
       if (back) {
-        lastMove = it.movePrevious();
+        lastMove = it.moveBack();
         pos -= 1;
       } else {
         lastMove = it.moveNext();
@@ -337,88 +337,100 @@ void testParts(
     expect(it.isEmpty, true);
     expect(it.current, "");
 
-    // movePrevious().
-    expect(it.movePrevious(), true);
+    // moveBack().
+    expect(it.moveBack(), true);
     expect(it.isEmpty, false);
     expect(it.current, "$e");
-    expect(it.movePrevious(), true);
+    expect(it.moveBack(), true);
     expect(it.isEmpty, false);
     expect(it.current, "$d");
-    expect(it.movePrevious(), true);
+    expect(it.moveBack(), true);
     expect(it.isEmpty, false);
     expect(it.current, "$c");
-    expect(it.movePrevious(), true);
+    expect(it.moveBack(), true);
     expect(it.isEmpty, false);
     expect(it.current, "$b");
-    expect(it.movePrevious(), true);
+    expect(it.moveBack(), true);
     expect(it.isEmpty, false);
     expect(it.current, "$a");
-    expect(it.movePrevious(), false);
+    expect(it.moveBack(), false);
     expect(it.isEmpty, true);
     expect(it.current, "");
 
-    // moveNext(c).
-    expect(it.moveNext(c), true);
+    // moveNext(int).
+    expect(it.moveTo(c), true);
     expect(it.current, "$c");
-    expect(it.moveNext(b), false);
-    expect(it.moveNext(c), false);
+    expect(it.moveTo(b), false);
+    expect(it.moveTo(c), false);
     expect(it.current, "$c");
-    expect(it.moveNext(d), true);
+    expect(it.moveTo(d), true);
     expect(it.current, "$d");
 
-    // movePrevious(c).
-    expect(it.movePrevious(c), true);
+    // moveBack(c).
+    expect(it.moveBackTo(c), true);
     expect(it.current, "$c");
-    expect(it.movePrevious(d), false);
-    expect(it.movePrevious(c), false);
-    expect(it.movePrevious(a), true);
+    expect(it.moveBackTo(d), false);
+    expect(it.moveBackTo(c), false);
+    expect(it.moveBackTo(a), true);
     expect(it.current, "$a");
+
+    // moveNext(n)
+    expect(it.moveBack(), false);
+
+    expect(it.moveNext(2), true);
+    expect(it.current, "$a$b");
+    expect(it.moveNext(4), false);
+    expect(it.current, "$c$d$e");
+    expect(it.moveNext(0), true);
+    expect(it.current, "");
+    expect(it.moveNext(1), false);
+    expect(it.current, "");
+
+    // moveBack(n).
+    expect(it.moveBack(2), true);
+    expect(it.current, "$d$e");
+    expect(it.moveBack(1), true);
+    expect(it.current, "$c");
+    expect(it.moveBack(3), false);
+    expect(it.current, "$a$b");
+    expect(it.moveBack(), false);
+
 
     // moveFirst.
-    it.includeAllNext();
+    it.expandAll();
     expect(it.current, "$a$b$c$d$e");
-    expect(it.moveFirst(), true);
-    expect(it.current, "$a");
-    expect(it.moveFirst(), true);
-    expect(it.current, "$a");
-    it.includeAllNext();
-    expect(it.current, "$a$b$c$d$e");
-    expect(it.moveFirst(b), true);
+    expect(it.collapseToFirst(b), true);
     expect(it.current, "$b");
-    it.includeAllNext();
+    it.expandAll();
     expect(it.current, "$b$c$d$e");
-    expect(it.moveFirst(a), false);
+    expect(it.collapseToFirst(a), false);
     expect(it.current, "$b$c$d$e");
 
-    // moveLast
-    expect(it.moveLast(), true);
-    expect(it.current, "$e");
-    it.includeAllPrevious();
+    // moveBackTo
+    it.expandBackAll();
     expect(it.current, "$a$b$c$d$e");
-    expect(it.moveLast(c), true);
-    expect(it.current, "$c");
-    expect(it.moveLast(), true);
+    expect(it.collapseToLast(c), true);
     expect(it.current, "$c");
 
     // includeNext/includePrevious
-    expect(it.includeNext(e), true);
+    expect(it.expandTo(e), true);
     expect(it.current, "$c$d$e");
-    expect(it.includeNext(e), false);
-    expect(it.includePrevious(b), true);
+    expect(it.expandTo(e), false);
+    expect(it.expandBackTo(b), true);
     expect(it.current, "$b$c$d$e");
-    expect(it.includePrevious(b), false);
+    expect(it.expandBackTo(b), false);
     expect(it.current, "$b$c$d$e");
-    expect(it.moveFirst(c), true);
+    expect(it.collapseToFirst(c), true);
     expect(it.current, "$c");
 
-    // includeUntilNext/includeAfterPrevious
-    expect(it.includeAfterPrevious(a), true);
+    // includeUntilNext/expandBackUntil
+    expect(it.expandBackUntil(a), true);
     expect(it.current, "$b$c");
-    expect(it.includeAfterPrevious(a), true);
+    expect(it.expandBackUntil(a), true);
     expect(it.current, "$b$c");
-    expect(it.includeUntilNext(e), true);
+    expect(it.expandUntil(e), true);
     expect(it.current, "$b$c$d");
-    expect(it.includeUntilNext(e), true);
+    expect(it.expandUntil(e), true);
     expect(it.current, "$b$c$d");
 
     // dropFirst/dropLast
@@ -426,42 +438,42 @@ void testParts(
     expect(it.current, "$c$d");
     expect(it.dropLast(), true);
     expect(it.current, "$c");
-    it.includeAllPrevious();
-    it.includeAllNext();
+    it.expandBackAll();
+    it.expandAll();
     expect(it.current, "$a$b$c$d$e");
-    expect(it.dropFirst(b), true);
+    expect(it.dropTo(b), true);
     expect(it.current, "$c$d$e");
-    expect(it.dropLast(d), true);
+    expect(it.dropBackTo(d), true);
     expect(it.current, "$c");
 
-    it.includeAllPrevious();
-    it.includeAllNext();
+    it.expandBackAll();
+    it.expandAll();
     expect(it.current, "$a$b$c$d$e");
 
-    expect(it.dropUntilFirst(b), true);
+    expect(it.dropUntil(b), true);
     expect(it.current, "$b$c$d$e");
-    expect(it.dropAfterLast(d), true);
+    expect(it.dropBackUntil(d), true);
     expect(it.current, "$b$c$d");
 
-    it.dropFirstWhile((x) => x == b.string);
+    it.dropWhile((x) => x == b.string);
     expect(it.current, "$c$d");
-    it.includeAllPrevious();
+    it.expandBackAll();
     expect(it.current, "$a$b$c$d");
-    it.dropLastWhile((x) => x != b.string);
+    it.dropBackWhile((x) => x != b.string);
     expect(it.current, "$a$b");
-    it.dropLastWhile((x) => false);
+    it.dropBackWhile((x) => false);
     expect(it.current, "$a$b");
 
     // include..While
-    it.includeNextWhile((x) => false);
+    it.expandWhile((x) => false);
     expect(it.current, "$a$b");
-    it.includeNextWhile((x) => x != e.string);
+    it.expandWhile((x) => x != e.string);
     expect(it.current, "$a$b$c$d");
-    expect(it.moveFirst(c), true);
+    expect(it.collapseToFirst(c), true);
     expect(it.current, "$c");
-    it.includePreviousWhile((x) => false);
+    it.expandBackWhile((x) => false);
     expect(it.current, "$c");
-    it.includePreviousWhile((x) => x != a.string);
+    it.expandBackWhile((x) => x != a.string);
     expect(it.current, "$b$c");
 
     var cs2 = cs.replaceAll(c, gc(""));
@@ -482,9 +494,9 @@ void testParts(
     var cs9 = cs8.replaceAll(a + a, b);
     expect(cs9, gc("$a$c$b$a$d$b$a"));
     it = cs9.iterator;
-    it.moveNext(b + a);
+    it.moveTo(b + a);
     expect("$b$a", it.current);
-    it.includeNext(b + a);
+    it.expandTo(b + a);
     expect("$b$a$d$b$a", it.current);
     var cs10 = it.replaceAll(b + a, e + e);
     expect(cs10, gc("$a$c$e$e$d$e$e"));
@@ -528,17 +540,17 @@ void testParts(
     expect(it.endsWith(b + c + d), false);
     expect(it.endsWith(d), false);
 
-    it.moveFirst(c);
-    expect(it.previousEndsWith(gc("")), true);
-    expect(it.previousEndsWith(b), true);
-    expect(it.previousEndsWith(a + b), true);
-    expect(it.previousEndsWith(a + b + c), false);
-    expect(it.previousEndsWith(a), false);
+    it.collapseToFirst(c);
+    expect(it.isPrecededBy(gc("")), true);
+    expect(it.isPrecededBy(b), true);
+    expect(it.isPrecededBy(a + b), true);
+    expect(it.isPrecededBy(a + b + c), false);
+    expect(it.isPrecededBy(a), false);
 
-    expect(it.nextStartsWith(gc("")), true);
-    expect(it.nextStartsWith(d), true);
-    expect(it.nextStartsWith(d + e), true);
-    expect(it.nextStartsWith(c + d + e), false);
-    expect(it.nextStartsWith(e), false);
+    expect(it.isFollowedBy(gc("")), true);
+    expect(it.isFollowedBy(d), true);
+    expect(it.isFollowedBy(d + e), true);
+    expect(it.isFollowedBy(c + d + e), false);
+    expect(it.isFollowedBy(e), false);
   });
 }

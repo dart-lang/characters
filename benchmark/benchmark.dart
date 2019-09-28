@@ -70,7 +70,7 @@ int replaceStrings() {
 String reverse(String input) {
   var chars = Characters(input);
   var buffer = StringBuffer();
-  for (var it = chars.iteratorEnd; it.movePrevious();) {
+  for (var it = chars.iteratorAtEnd; it.moveBack();) {
     buffer.write(it.current);
   }
   return buffer.toString();

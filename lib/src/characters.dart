@@ -2,12 +2,7 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-import "dart:collection";
-
-import "grapheme_clusters/constants.dart";
-import "grapheme_clusters/breaks.dart";
-
-part "characters_impl.dart";
+import "characters_impl.dart" as i;
 
 /// The characters of a string.
 ///
@@ -27,7 +22,7 @@ part "characters_impl.dart";
 abstract class Characters implements Iterable<String> {
   /// Creates a [Characters] allowing iteration of
   /// the characters of [string].
-  factory Characters(String string) = _Characters;
+  factory Characters(String string) = i.Characters;
 
   /// The string to iterate over.
   String get string;
@@ -84,13 +79,13 @@ abstract class Characters implements Iterable<String> {
   /// Returns a [CharacterRange] containing the first occurrence of
   /// [characters] in this string.
   /// Returns `null` if there is no such occurrence.
-  CharacterRange/*?*/ findFirst(Characters characters);
+  CharacterRange /*?*/ findFirst(Characters characters);
 
   /// Finds the last occurrence of [characters].
   ///
   /// Returns a [CharacterRange] containing the last occurrence of
   /// [characters]. Returns `null` if there is no such occurrence,
-  CharacterRange/*?*/ findLast(Characters characters);
+  CharacterRange /*?*/ findLast(Characters characters);
 
   /// Eagerly selects a subset of the characters.
   ///
@@ -181,18 +176,18 @@ abstract class Characters implements Iterable<String> {
   /// of this sequence of strings with any other sequence of strings.
   Characters operator +(Characters other);
 
-  /// Replaces [source] with [replacement].
+  /// Replaces [pattern] with [replacement].
   ///
   /// Returns a new [GrapehemeClusters] where all occurrences of the
-  /// [source] character sequence are replaced by [replacement],
+  /// [pattern] character sequence are replaced by [replacement],
   /// unless the occurrence overlaps a prior replaced sequence.
-  Characters replaceAll(Characters source, Characters replacement);
+  Characters replaceAll(Characters pattern, Characters replacement);
 
-  /// Replaces the first [source] with [replacement].
+  /// Replaces the first [pattern] with [replacement].
   ///
   /// Returns a new [Characters] where the first occurence of the
-  /// [source] character sequence, if any, is replaced by [replacement].
-  Characters replaceFirst(Characters source, Characters replacement);
+  /// [pattern] character sequence, if any, is replaced by [replacement].
+  Characters replaceFirst(Characters pattern, Characters replacement);
 
   /// The characters of the lower-case version of [string].
   Characters toLowerCase();
@@ -239,13 +234,12 @@ abstract class Characters implements Iterable<String> {
 ///
 ///
 /// The character range implements [Iterator]
-/// (actually an [BidirectionalIterator] of [String]).
 /// The [moveNext] operation, when called with no argument,
 /// iterates the *next* single characters of the [source] sequence.
-abstract class CharacterRange implements BidirectionalIterator<String> {
+abstract class CharacterRange implements Iterator<String> {
   /// Creates a new character iterator iterating the character
   /// of [string].
-  factory CharacterRange(String string) = _CharacterRange;
+  factory CharacterRange(String string) = i.CharacterRange;
 
   /// The character sequence that this range is a sub-sequence of.
   Characters get source;
@@ -278,16 +272,19 @@ abstract class CharacterRange implements BidirectionalIterator<String> {
 
   /// Moves the range to be the next [count] characters after the current range.
   ///
-  /// Moves the start position to the end of the current range and the
-  /// end position to the position after the [count]th following character,
-  /// or to the end of the string if there are fewer than [count] following
-  /// characters.
+  /// The new range starts and the end of the current range and includes
+  /// the next [count] characters, or as many as available if there
+  /// are fewer than [count] characters following the current range.
+  ///
+  /// The [count] must not be negative.
+  /// If it is zero, the call has the same effect as [collapseToEnd].
   ///
   /// Returns `true` if there were [count] following characters
   /// and `false` if not.
   bool moveNext([int count = 1]);
 
-  /// Moves the range to the next occurrence of [target] after the current range.
+  /// Moves the range to the next occurrence of [target]
+  /// after the current range.
   ///
   /// If there is an occurrence of [target] in the characters following
   /// the current range,
@@ -299,242 +296,303 @@ abstract class CharacterRange implements BidirectionalIterator<String> {
   /// Returns `true` if the range is modified and `false` if not.
   bool moveTo(Characters target);
 
-  /// Makes the range be the characters up to the next occurrence of [target].
+  /// Moves to the range until the next occurrence of [target].
   ///
-  /// The new range starts at the end of the current range.
   /// If there is an occurrence of [target] in the characters following
   /// the current range,
-  /// then the new range ends just before the first such occurrence of [target],
-  /// otherwise it ends at the end of the string.
+  /// then the new range contains the characters from the end
+  /// of the current range until, but no including the first such
+  /// occurrence of [target].
+  ///
+  /// If there is no occurrence of [target] after the current range,
+  /// the new range contains all the characters following the current range,
+  /// from the end of the current range until the end of the string.
   ///
   /// Returns `true` if there was an occurrence of [target].
   bool moveUntil(Characters target);
 
-  /// Makes the range be previous [count] characters before the current range.
+  /// Moves the range to be the last [count] characters before the current
+  /// range.
   ///
-  /// Moves the end position to the start of the current range and the
-  /// start position to the position to just before the [count]th preceding
-  /// character, or to the beginning of the string if there are fewer
-  /// than [count] preceding characters.
+  /// The new range ends at the start of the current range and includes
+  /// the previous [count] characters, or as many as available if there
+  /// are fewer than [count] characters preceding the current range.
+  ///
+  /// The [count] must not be negative.
+  /// If it is zero, the call has the same effect as [collapseToStart].
   ///
   /// Returns `true` if there were [count] preceding characters
   /// and `false` if not.
-  bool movePrevious([int count]);
+  bool moveBack([int count = 1]);
 
-  bool moveBackTo(Characters target);
-
-  /// Makes the range be the characters after to the previous occurrence of [target].
+  /// Moves the range to the last occurrence of [target]
+  /// before the current range.
   ///
-  /// If there is an occurrence of [target] before the current range,
-  /// the new range starts at the end of the last such occurrence of [target],
-  /// and ends at the start of the current range.
+  /// If there is an occurrence of [target] in the characters preceding
+  /// the current range,
+  /// then the new range contains exactly the last such occurrence of [target].
   ///
   /// If there is no occurrence of [target] after the current range,
   /// the range is not modified.
   ///
   /// Returns `true` if the range is modified and `false` if not.
+  bool moveBackTo(Characters target);
+
+  /// Moves to the range after the previous occurence of [target].
+  ///
+  /// If there is an occurrence of [target] in the characters preceding
+  /// the current range,
+  /// then the new range contains the characters after
+  /// the last such occurrence, and up to the start of the current range.
+  ///
+  /// If there is no occurrence of [target] after the current range,
+  /// the new range contains all the characters preceding the current range,
+  /// from the start of the string to the start of the current range.
+  ///
+  /// Returns `true` if there was an occurrence of [target].
   bool moveBackUntil(Characters target);
+
+  /// Expands the current range with the next [count] characters.
+  ///
+  /// Expands the current range to include the first [count] characters
+  /// following the current range, or as many as are available if
+  /// there are fewer than [count] characters following the current range.
+  ///
+  /// The [count] must not be negative.
+  /// If it is zero, the range does not change.
+  ///
+  /// Returns `true` if there are at least [count] characters following
+  /// the current range, and `false` if not.
+  bool expandNext([int count = 1]);
+
+  /// Expands the range to include the next occurence of [target].
+  ///
+  /// If there is an occurrence of [target] in the characters following
+  /// the current range, the end of the the range is moved to just after
+  /// the first such occurrence.
+  ///
+  /// If there is no such occurrence of [target], the range is not modified.
+  ///
+  /// Returns `true` if there is an occurrence of [target] and `false` if not.
+  /// Notice that if [target] is empty,
+  /// the result is `true` even though the range is not modified.
+  bool expandTo(Characters target);
+
+  /// Expands the range to include characters until the next [target].
+  ///
+  /// If there is an occurrence of [target] in the characters following
+  /// the current range, the end of the the range is moved to just before
+  /// the first such occurrence.
+  ///
+  /// If there is no such occurrence of [target], the end of the range is
+  /// moved to the end of [source].
+  ///
+  /// Returns `true` if there is an occurrence of [target] and `false` if not.
+  bool expandUntil(Characters target);
+
+  /// Expands the range with the following characters satisfying [test].
+  ///
+  /// Iterates through the characters following the current range
+  /// and includes them into the range until finding a character that
+  /// [test] returns `false` for.
+  void expandWhile(bool Function(String) test);
+
+  /// Expands the range to the end of [source].
+  void expandAll();
+
+  /// Expands the current range with the preceding [count] characters.
+  ///
+  /// Expands the current range to include the last [count] characters
+  /// preceding the current range, or as many as are available if
+  /// there are fewer than [count] characters preceding the current range.
+  ///
+  /// The [count] must not be negative.
+  /// If it is zero, the range does not change.
+  ///
+  /// Returns `true` if there are at least [count] characters preceding
+  /// the current range, and `false` if not.
+  bool expandBack([int count = 1]);
+
+  /// Expands the range to include the previous occurence of [target].
+  ///
+  /// If there is an occurrence of [target] in the characters preceding
+  /// the current range, the stat of the the range is moved to just before
+  /// the last such occurrence.
+  ///
+  /// If there is no such occurrence of [target], the range is not modified.
+  ///
+  /// Returns `true` if there is an occurrence of [target] and `false` if not.
+  /// Notice that if [target] is empty,
+  /// the result is `true` even though the range is not modified.
+  bool expandBackTo(Characters target);
+
+  /// Expands the range to include characters back until the previous [target].
+  ///
+  /// If there is an occurrence of [target] in the characters preceding
+  /// the current range, the start of the the range is moved to just after
+  /// the last such occurrence.
+  ///
+  /// If there is no such occurrence of [target], the end of the range is
+  /// moved to the end of [source].
+  ///
+  /// Returns `true` if there is an occurrence of [target] and `false` if not.
+  bool expandBackUntil(Characters target);
+
+  /// Expands the range with the preceding characters satisffying [test].
+  ///
+  /// Iterates back through the characters preceding the current range
+  /// and includes them into the range until finding a character that
+  /// [test] returns `false` for.
+  void expandBackWhile(bool Function(String) test);
+
+  /// Expands the range back to the start of [source].
+  void expandBackAll();
 
   /// Collapses the range to its start.
   ///
-  /// Changes the range to end at its start.
-  /// The resulting range is always empty.
-  void collapseStart();
+  /// Sets the end of the range to be the same position as the start.
+  /// The new range is empty and positioned at the start of the current range.
+  void collapseToStart();
+
+  /// Collapses to the first occurrence of [target] in the current range.
+  ///
+  /// If there is an occurrence of [target] in the characters of the current
+  /// range, then the new range contains exactly the characters of the
+  /// first such occurrence.
+  ///
+  /// If there is no such occurrence, the range is not changed.
+  ///
+  /// Returns `true` if there is an occurrence of [target] and `false` if not.
+  bool collapseToFirst(Characters target);
+
+  /// Collapses to the last occurrence of [target] in the current range.
+  ///
+  /// If there is an occurrence of [target] in the characters of the current
+  /// range, then the new range contains exactly the characters of the
+  /// last such occurrence.
+  ///
+  /// If there is no such occurrence, the range is not changed.
+  ///
+  /// Returns `true` if there is an occurrence of [target] and `false` if not.
+  bool collapseToLast(Characters target);
 
   /// Collapses the range to its end.
   ///
-  /// Changes the range to start at its end.
-  /// The resulting range is always empty.
-  void collapseEnd();
+  /// Sets the start of the range to be the same as its end.
+  /// The new range is an empty range positioned at the end
+  /// of the current range.
+  void collapseToEnd();
 
-  /// Finds the first instance of [target] inside the current range.
+  /// Drop the first [count] characters from the range.
   ///
-  /// If there is no occurrence of [target] in the current range,
-  /// then the range is not modified.
+  /// Advances the start of the range to after the [count] first characters
+  /// of the range, or as many as are available if
+  /// there are fewer than [count] characters in the current range.
   ///
-  /// If [target] is omitted, moves to the first single character
-  /// inside the current range, if the range is non-empty.
-  /// If the range is empty, it is not modified.
+  /// The [count] must not be negative.
+  /// If it is zero, the range is not changed.
   ///
-  /// Returns `true` if the range is modified and `false` if it is not.
-  bool moveFirst([Characters target]);
+  /// Returns `true` if there are [count] characters in the range,
+  /// and `false` if there are fewer.
+  bool dropFirst([int count = 1]);
 
-  /// Finds the last instance of [target] inside the current range.
+  /// Drops the first occurrence of [target] in the range.
   ///
-  /// If there is no occurrence of [target] in the current range,
-  /// then the range is not modified.
+  /// If the range contains any occurrences of [target],
+  /// then all characters before the end of the first such occurrence
+  /// is removed from the range.
+  /// This advances the start of the range to the end of the
+  /// first occurrence of [target].
   ///
-  /// If [target] is omitted, moves to the last single character
-  /// inside the current range, if the range is non-empty.
-  /// If the range is empty, it is not modified.
+  /// If there are no occurrences of [target] in the range,
+  /// the range is not changed.
   ///
-  /// Returns `true` if the range is modified and `false` if it is not.
-  bool moveLast([Characters target]);
+  /// Returns `true` if there is an occurrence of [target] and `false` if not.
+  bool dropTo(Characters target);
 
-  /// Starts the range at the start of the source characters.
+  /// Drops characters from the start of the range until before
+  /// the first occurrence of [target].
   ///
-  /// Changes the range to include all characters of the source sequence
-  /// from its beginngin until the current range end.
-  void includeAllPrevious();
+  /// If the range contains any occurrences of [target],
+  /// then all characters before the start of the first such occurrence
+  /// is removed from the range.
+  /// This advances the start of the range to the start of the
+  /// first occurrence of [target].
+  ///
+  /// If there are no occurrences of [target] in the range,
+  /// all characteres in the range are removed,
+  /// which gives the same effect as [collapseToEnd].
+  ///
+  /// Returns `true` if there is an occurrence of [target] and `false` if not.
+  bool dropUntil(Characters target);
 
-  /// Ends the range at the end of the source characters.
+  /// Drops characters from the start of the range while they satisfy [test].
   ///
-  /// Changes the range to include all characters of the source sequence
-  /// from the current range start to the end of the source character sequence.
-  void includeAllNext();
+  /// Iterates the characters of the current range from the start
+  /// and removes all the iterated characters until one is
+  /// reached for which [test] returns `false`.
+  /// If on such character is found, all characters are removed,
+  /// which gives the same effect as [collapseToEnd].
+  void dropWhile(bool Function(String) test);
 
-  /// Includes the next occurrence of [target] into the current range.
+  /// Drop the last [count] characters from the range.
   ///
-  /// Finds the next occurrence of [target] after the current range,
-  /// then changes the end of the range to be after that occurence of [target].
+  /// Retracts the end of the range to before the [count] last characters
+  /// of the range, or as many as are available if
+  /// there are fewer than [count] characters in the current range.
   ///
-  /// If there is no occurrence of [target] after the current range,
-  /// the range is not modified.
+  /// The [count] must not be negative.
+  /// If it is zero, the range is not changed.
   ///
-  /// If [target] is omitted, the next single character after the current
-  /// range is used instead, if any. If there are no characters after the
-  /// current range, the range is not modified.
-  ///
-  /// Returns `true` if the range is modified and `false` if not.
-  bool includeNext([Characters target]);
+  /// Returns `true` if there are [count] characters in the range,
+  /// and `false` if there are fewer.
+  bool dropLast([int count = 1]);
 
-  /// Includes characters until the next occurrence of [target] into the current range.
+  /// Drops the last occurrence of [target] in the range.
   ///
-  /// Finds the next occurrence of [target] after the current range,
-  /// then changes the end of the range to be before that occurence of [target].
+  /// If the range contains any occurrences of [target],
+  /// then all characters after the start of the first such occurrence
+  /// is removed from the range.
+  /// This retracts the end of the range to the start of the
+  /// last occurrence of [target].
   ///
-  /// If there is no occurrence of [target] after the current range,
-  /// the range is not modified.
+  /// If there are no occurrences of [target] in the range,
+  /// the range is not changed.
   ///
-  /// Returns `true` if the range is modified and `false` if not.
-  bool includeUntilNext(Characters target);
+  /// Returns `true` if there is an occurrence of [target] and `false` if not.
+  bool dropBackTo(Characters target);
 
-  /// Includes the next single characters while they are accepted by [test].
+  /// Drops characters from the end of the range until after
+  /// the last occurrence of [target].
   ///
-  /// Each of the next single characters after the current range are
-  /// tested, in first-to-last order, using [test] until reaching the end
-  /// or until the call to [test] returns `false`.
-  /// The end of the range is changed to the end of the most recent character
-  /// accepted by [test].
-  void includeNextWhile(bool test(String character));
+  /// If the range contains any occurrences of [target],
+  /// then all characters after the end of the last such occurrence
+  /// is removed from the range.
+  /// This retracts the end of the range to the end of the
+  /// last occurrence of [target].
+  ///
+  /// If there are no occurrences of [target] in the range,
+  /// all characteres in the range are removed,
+  /// which gives the same effect as [collapseToStart].
+  ///
+  /// Returns `true` if there is an occurrence of [target] and `false` if not.
+  bool dropBackUntil(Characters target);
 
-  /// Includes the previous occurrence of [target] into the current range.
+  /// Drops characters from the end of the range while they satisfy [test].
   ///
-  /// Finds the previous occurrence of [target] before the current range,
-  /// then changes the end of the range to be before that occurence of [target].
-  ///
-  /// If there is no occurrence of [target] before the current range,
-  /// the range is not modified.
-  ///
-  /// If [target] is omitted, the previous single character before the current
-  /// range is used instead, if any. If there are no before after the
-  /// current range, the range is not modified.
-  ///
-  /// Returns `true` if the range is modified and `false` if not.
-  bool includePrevious([Characters target]);
-
-  /// Includes characters after the previous occurrence of [target].
-  ///
-  /// Finds the previous occurrence of [target] before the current range,
-  /// then changes the start of the range to be after that occurence of [target].
-  ///
-  /// If there is no occurrence of [target] before the current range,
-  /// the range is not modified.
-  ///
-  /// Returns `true` if the range is modified and `false` if not.
-  bool includeAfterPrevious(Characters target);
-
-  /// Includes the previous single characters while they are accepted by [test].
-  ///
-  /// Each of the previous single characters before the current range,
-  /// in last-to-first order, are tested using [test] until reaching the end
-  /// or until the call to [test] returns `false`.
-  /// The start of the range is changed to the start of the most recent character
-  /// accepted by [test].
-  void includePreviousWhile(bool test(String character));
-
-  /// Drops the first occurrence of [target] from the current range.
-  ///
-  /// Drops characters from the start of the range up to, and including,
-  /// the first occurrence of [target] in the range.
-  /// Finds the first occurrence of [target] in the current range,
-  /// then changes the start of the range to be after that occurence of [target].
-  ///
-  /// If there is no occurrence of [target] in the current range,
-  /// the range is not modified.
-  ///
-  /// If [target] is omitted, the first single character of the current
-  /// range is used instead, if any. If the current range is empty,
-  /// the range is not modified.
-  ///
-  /// Returns `true` if the range is modified and `false` if not.
-  bool dropFirst([Characters target]);
-
-  /// Drops characters before the first occurrence of [target].
-  ///
-  /// Drops characters from the start of the range up to, but not including,
-  /// the first occurrence of [target] in the range.
-  /// Finds the first occurrence of [target] in the current range,
-  /// then changes the start of the range to be before that occurence of [target].
-  ///
-  /// If there is no occurrence of [target] in the current range,
-  /// the range is not modified.
-  ///
-  /// Returns `true` if the range is modified and `false` if not.
-  bool dropUntilFirst(Characters target);
-
-  /// Drops characters from the last occurrence of [target].
-  ///
-  /// Drops characters from the end of the range back to, and including,
-  /// the last occurrence of [target] in the range.
-  /// Finds the last occurrence of [target] in the current range,
-  /// then changes the end of the range to be before that occurence of [target].
-  ///
-  /// If there is no occurrence of [target] in the current range,
-  /// the range is not modified.
-  ///
-  /// If [target] is omitted, the last single character of the current
-  /// range is used instead, if any. If the current range is empty,
-  /// the range is not modified.
-  ///
-  /// Returns `true` if the range is modified and `false` if not.
-  bool dropLast([Characters target]);
-
-  /// Drops characters afer the last occurrence of [target] from the current range.
-  ///
-  /// Drops characters from the end of the range back to, but not including,
-  /// the last occurrence of [target] in the range.
-  /// Finds the last occurrence of [target] in the current range,
-  /// then changes the end of the range to be after that occurence of [target].
-  ///
-  /// If there is no occurrence of [target] in the current range,
-  /// the range is not modified.
-  ///
-  /// Returns `true` if the range is modified and `false` if not.
-  bool dropAfterLast(Characters target);
-
-  /// Drops initial single characters accepted by [test].
-  ///
-  /// Calls [test] on each single character of the range, in first-to-last
-  /// order, until [test] returns `false` or until reaching the end of the range.
-  /// Then changes the start of the range to the end of the most recent
-  /// character which [test] accepted.
-  void dropFirstWhile(bool test(String characters));
-
-  /// Drops final single characters accepted by [test].
-  ///
-  /// Calls [test] on each single character of the range, in last-to-first
-  /// order, until [test] returns `false` or until reaching the end of the range.
-  /// Then changes the end of the range to the start of the most recent
-  /// character which [test] accepted.
-  void dropLastWhile(bool test(String characters));
+  /// Iterates the characters of the current range backwards from the end
+  /// and removes all the iterated characters until one is
+  /// reached for which [test] returns `false`.
+  /// If on such character is found, all characters are removed,
+  /// which gives the same effect as [collapseToStart].
+  void dropBackWhile(bool Function(String) test);
 
   /// Creates a new [Characters] sequence by replacing the current range.
   ///
-  /// Replaces the current range in of the source sequence with [replacement].
+  /// Replaces the current range in [source] with [replacement].
   ///
   /// Returns a new [Characters] instance. Since the inserted characters
-  /// may combine with the previous or next characters, grapheme cluster
+  /// may combine with the preceding or following characters, grapheme cluster
   /// boundaries need to be recomputed from scratch.
   Characters replaceRange(Characters replacement);
 
@@ -544,8 +602,7 @@ abstract class CharacterRange implements BidirectionalIterator<String> {
   /// finds and replaces the next occurrence which does not overlap with
   /// the earlier, already replaced, occurrence.
   ///
-  /// Returns [source] if there are no occurrences of [pattern]
-  /// in the current range, otherwise returns a new [Characters] instance.
+  /// Returns new [Characters] instance for the resulting string.
   Characters replaceAll(Characters pattern, Characters replacement);
 
   /// Replaces the first occurrence of [pattern] with [replacement].
@@ -570,15 +627,15 @@ abstract class CharacterRange implements BidirectionalIterator<String> {
   /// [characters], `false` if not.
   bool endsWith(Characters characters);
 
-  /// Whether the current range is preceeded by [characters].
+  /// Whether the current range is preceded by [characters].
   ///
-  /// Returns `true` if the previous characters immediately before the
-  /// current range ends with [characters].
-  bool nextStartsWith(Characters characters);
+  /// Returns `true` if the characters immediately preceding the current
+  /// range are [characters], and `false` if not.
+  bool isPrecededBy(Characters characters);
 
   /// Whether the current range is followed by [characters].
   ///
-  /// Returns `true` if the next characters immediately after the
-  /// current range starts with [characters].
-  bool previousEndsWith(Characters characters);
+  /// Returns `true` if the characters immediately following the current
+  /// range are [characters], and `false` if not.
+  bool isFollowedBy(Characters characters);
 }
