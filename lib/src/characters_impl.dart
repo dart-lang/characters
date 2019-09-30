@@ -4,6 +4,8 @@
 
 import "dart:collection" show ListBase;
 
+import 'package:characters/src/grapheme_clusters/table.dart';
+
 import "characters.dart";
 import "grapheme_clusters/constants.dart";
 import "grapheme_clusters/breaks.dart";
@@ -496,20 +498,36 @@ class StringCharacterRange implements CharacterRange {
   bool moveNext([int count = 1]) => _advanceEnd(count, _end);
 
   bool _advanceEnd(int count, int newStart) {
-    RangeError.checkNotNegative(count, "count");
-    var breaks = _breaksFromEnd();
-    int end = _end;
-    while (count > 0) {
-      int nextBreak = breaks.nextBreak();
-      if (nextBreak >= 0) {
-        end = nextBreak;
-      } else {
-        break;
+    if (count > 0) {
+      var state = stateSoTNoBreak;
+      for (int index = _end; index < _string.length;) {
+        int char = _string.codeUnitAt(index);
+        int category = categoryControl;
+        int nextIndex = index + 1;
+        if (char & 0xFC00 != 0xD800) {
+          category = low(char);
+        } else if (nextIndex < _string.length) {
+          int nextChar = _string.codeUnitAt(nextIndex);
+          if (nextChar & 0xFC00 == 0xDC00) {
+            nextIndex += 1;
+            category = high(char, nextChar);
+          }
+        }
+        state = move(state, category);
+        if (state & stateNoBreak == 0 && --count == 0) {
+          _move(newStart, index);
+          return true;
+        }
+        index = nextIndex;
       }
-      count--;
+      _move(newStart, _string.length);
+      return count == 1 && state != stateSoTNoBreak;
+    } else if (count == 0) {
+      _move(newStart, _end);
+      return true;
+    } else {
+      throw RangeError.range(count, 0, null, "count");
     }
-    _move(newStart, end);
-    return count == 0;
   }
 
   bool _moveNextPattern(String patternString, int start, int end) {
