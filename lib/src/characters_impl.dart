@@ -282,7 +282,7 @@ class StringCharacters extends Iterable<String> implements Characters {
       while ((index = breaks.nextBreak()) >= 0) {
         if (!test(string.substring(index, end))) {
           if (end == string.length) return this;
-          return end == 0 ? _empty: StringCharacters(string.substring(0, end));
+          return end == 0 ? _empty : StringCharacters(string.substring(0, end));
         }
         end = index;
       }
@@ -915,8 +915,7 @@ int _indexOf(String source, String pattern, int start, int end) {
   int rest = source.length - realEnd;
   if (rest <= (realEnd - start) * 2) {
     int index = 0;
-    while (
-        start < realEnd && (index = source.indexOf(pattern, start)) >= 0) {
+    while (start < realEnd && (index = source.indexOf(pattern, start)) >= 0) {
       if (index > realEnd) return -1;
       if (isGraphemeClusterBoundary(source, start, end, index) &&
           isGraphemeClusterBoundary(
