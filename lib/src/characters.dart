@@ -179,14 +179,19 @@ abstract class Characters implements Iterable<String> {
   /// Replaces [pattern] with [replacement].
   ///
   /// Returns a new [GrapehemeClusters] where all occurrences of the
-  /// [pattern] character sequence are replaced by [replacement],
-  /// unless the occurrence overlaps a prior replaced sequence.
+  /// [pattern] characters are replaced by [replacement],
+  /// unless the occurrence overlaps a prior
+  /// replaced occurrence of [pattern].
+  ///
+  /// Returns the current characters if there is no occurrence of [pattern].
   Characters replaceAll(Characters pattern, Characters replacement);
 
   /// Replaces the first [pattern] with [replacement].
   ///
   /// Returns a new [Characters] where the first occurence of the
   /// [pattern] character sequence, if any, is replaced by [replacement].
+  ///
+  /// Returns the current characters if there is no occurrence of [pattern].
   Characters replaceFirst(Characters pattern, Characters replacement);
 
   /// The characters of the lower-case version of [string].
@@ -250,6 +255,21 @@ abstract class CharacterRange implements Iterator<String> {
   /// The code points of the current character range.
   Runes get runes;
 
+  /// The characters of this range.
+  Characters get currentCharacters;
+
+  /// The characters before the current range.
+  Characters get charactersBefore;
+
+  /// The characters after the current range.
+  Characters get charactersAfter;
+
+  /// The string of the characters before the current range.
+  String get stringBefore;
+
+  /// The string of the characters after the current range.
+  String get stringAfter;
+
   /// Creates a copy of this [Character].
   ///
   /// The copy is in the exact same state as this iterator.
@@ -282,6 +302,9 @@ abstract class CharacterRange implements Iterator<String> {
   /// Returns `true` if there were [count] following characters
   /// and `false` if not.
   bool moveNext([int count = 1]);
+
+  /// Moves the range to be everything after the current range.
+  void moveNextAll();
 
   /// Moves the range to the next occurrence of [target]
   /// after the current range.
@@ -324,6 +347,9 @@ abstract class CharacterRange implements Iterator<String> {
   /// Returns `true` if there were [count] preceding characters
   /// and `false` if not.
   bool moveBack([int count = 1]);
+
+  /// Moves the range to be everything before the current range.
+  void moveBackAll();
 
   /// Moves the range to the last occurrence of [target]
   /// before the current range.
@@ -587,14 +613,18 @@ abstract class CharacterRange implements Iterator<String> {
   /// which gives the same effect as [collapseToStart].
   void dropBackWhile(bool Function(String) test);
 
-  /// Creates a new [Characters] sequence by replacing the current range.
+  /// Creates a new [Character] sequence by replacing the current range.
   ///
-  /// Replaces the current range in [source] with [replacement].
+  /// Replaces the current range in [source] with [replacement] and
+  /// creates a new [Characters] of the resulting string.
+  /// Returns a new [CharacterRange] on the new [Characters] instance
+  /// which contains the replacement characters.
   ///
-  /// Returns a new [Characters] instance. Since the inserted characters
-  /// may combine with the preceding or following characters, grapheme cluster
-  /// boundaries need to be recomputed from scratch.
-  Characters replaceRange(Characters replacement);
+  /// Since the inserted characters
+  /// may combine with the preceding or following code points,
+  /// the returned range may extend into into the code points
+  /// before and after the inserted replacement.
+  CharacterRange replaceRange(Characters replacement);
 
   /// Replaces all occurrences of [pattern] in the range with [replacement].
   ///
@@ -602,18 +632,29 @@ abstract class CharacterRange implements Iterator<String> {
   /// finds and replaces the next occurrence which does not overlap with
   /// the earlier, already replaced, occurrence.
   ///
-  /// Returns new [Characters] instance for the resulting string.
-  Characters replaceAll(Characters pattern, Characters replacement);
+  /// Returns new [CharacterRange] instance on this [Characters] instance
+  /// which contains all of the characters of the current range after replacements,
+  /// but which may also contain code points before
+  /// and after the current range, in case the replacement characters
+  /// combine with those characters.
+  ///
+  /// Returns `null` if there are no occurrences of [pattern] in the current range.
+  CharacterRange /*?*/ replaceAll(Characters pattern, Characters replacement);
 
   /// Replaces the first occurrence of [pattern] with [replacement].
   ///
   /// Finds the first occurrence of [pattern] in the current range,
   /// then replaces that occurrence with [replacement] and returns
-  /// the [Characters] of that string.
+  /// creates a new [Characters] of that string.
   ///
-  /// If there is no first occurrence of [pattern], then the
-  /// characters of the source string is returned.
-  Characters replaceFirst(Characters pattern, Characters replacement);
+  /// Returns new [CharacterRange] instance on this [Characters] instance
+  /// which contains all of the characters of the current range after replacement,
+  /// but which may also contain code points before
+  /// and after the current range, in case the replacement characters
+  /// combine with those characters.
+  ///
+  /// Returns `null` if there are no occurrences of [pattern] in the current range.
+  CharacterRange /*?*/ replaceFirst(Characters pattern, Characters replacement);
 
   /// Whether the current range starts with [characters].
   ///
