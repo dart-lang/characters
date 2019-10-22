@@ -152,7 +152,7 @@ class StringCharacters extends Iterable<String> implements Characters {
 
   @override
   Characters replaceFirst(Characters pattern, Characters replacement) =>
-    _rangeAll.replaceFirst(pattern, replacement)?.source ?? this;
+      _rangeAll.replaceFirst(pattern, replacement)?.source ?? this;
 
   @override
   bool containsAll(Characters other) =>
@@ -747,7 +747,8 @@ class StringCharacterRange implements CharacterRange {
   }
 
   @override
-  CharacterRange/*?*/ replaceFirst(Characters pattern, Characters replacement) {
+  CharacterRange /*?*/ replaceFirst(
+      Characters pattern, Characters replacement) {
     String patternString = pattern.string;
     String replacementString = replacement.string;
     String replaced;
@@ -767,7 +768,7 @@ class StringCharacterRange implements CharacterRange {
   }
 
   @override
-  CharacterRange/*?*/ replaceAll(Characters pattern, Characters replacement) {
+  CharacterRange /*?*/ replaceAll(Characters pattern, Characters replacement) {
     var patternString = pattern.string;
     var replacementString = replacement.string;
     if (patternString.isEmpty) {
@@ -798,7 +799,8 @@ class StringCharacterRange implements CharacterRange {
   CharacterRange replaceRange(Characters replacement) {
     String replacementString = replacement.string;
     String resultString = _string.replaceRange(_start, _end, replacementString);
-    return _expandRange(resultString, _start, _start + replacementString.length);
+    return _expandRange(
+        resultString, _start, _start + replacementString.length);
   }
 
   // Expands a range if its start or end are not grapheme cluster boundaries.
@@ -873,7 +875,8 @@ class StringCharacterRange implements CharacterRange {
   Characters get charactersAfter => StringCharacters(_string.substring(_end));
 
   @override
-  Characters get charactersBefore => StringCharacters(_string.substring(0, _start));
+  Characters get charactersBefore =>
+      StringCharacters(_string.substring(0, _start));
 
   @override
   Characters get currentCharacters => StringCharacters(current);

@@ -558,7 +558,7 @@ void testParts(
     // Unicode grapheme breaking character classes,
     // represented by their first value.
 
-    var pattern = gc("\t");  // A non-combining entry to be replaced.
+    var pattern = gc("\t"); // A non-combining entry to be replaced.
     var non = gc("");
 
     var c = otr + cr + pattern + lf + pic + pattern + zwj + pic + otr;
@@ -611,9 +611,9 @@ final Characters spc = gc("\u0903"); // Spacing Mark, Devanagari Sign Visarga.
 final Characters pre = gc("\u0600"); // Prepend, Arabic Number Sign.
 final Characters zwj = gc("\u200d"); // Zero-Width Joiner.
 final Characters pic = gc("\u00a9"); // Extended Pictographic, Copyright.
-final Characters reg = gc("\u{1f1e6}");  // Regional Identifier "a".
-final Characters hanl = gc("\u1100");  // Hangul L, Choseong Kiyeok.
-final Characters hanv = gc("\u1160");  // Hangul V, Jungseong Filler.
-final Characters hant = gc("\u11a8");  // Hangul T, Jongseong Kiyeok.
-final Characters hanlv = gc("\uac00");  // Hangul LV, Syllable Ga.
-final Characters hanlvt = gc("\uac01");  // Hangul LVT, Syllable Gag.
+final Characters reg = gc("\u{1f1e6}"); // Regional Identifier "a".
+final Characters hanl = gc("\u1100"); // Hangul L, Choseong Kiyeok.
+final Characters hanv = gc("\u1160"); // Hangul V, Jungseong Filler.
+final Characters hant = gc("\u11a8"); // Hangul T, Jongseong Kiyeok.
+final Characters hanlv = gc("\uac00"); // Hangul LV, Syllable Ga.
+final Characters hanlvt = gc("\uac01"); // Hangul LVT, Syllable Gag.
