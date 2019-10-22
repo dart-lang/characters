@@ -178,7 +178,7 @@ abstract class Characters implements Iterable<String> {
 
   /// Replaces [pattern] with [replacement].
   ///
-  /// Returns a new [GrapehemeClusters] where all occurrences of the
+  /// Returns a new [Characters] sequence where all occurrences of the
   /// [pattern] characters are replaced by [replacement],
   /// unless the occurrence overlaps a prior
   /// replaced occurrence of [pattern].
@@ -186,7 +186,7 @@ abstract class Characters implements Iterable<String> {
   /// Returns the current characters if there is no occurrence of [pattern].
   Characters replaceAll(Characters pattern, Characters replacement);
 
-  /// Replaces the first [pattern] with [replacement].
+  /// Replaces the first occurrence of [pattern] with [replacement].
   ///
   /// Returns a new [Characters] where the first occurence of the
   /// [pattern] character sequence, if any, is replaced by [replacement].
@@ -270,7 +270,7 @@ abstract class CharacterRange implements Iterator<String> {
   /// The string of the characters after the current range.
   String get stringAfter;
 
-  /// Creates a copy of this [Character].
+  /// Creates a copy of this [CharacterRange].
   ///
   /// The copy is in the exact same state as this iterator.
   /// Can be used to iterate the following characters more than once
@@ -613,47 +613,57 @@ abstract class CharacterRange implements Iterator<String> {
   /// which gives the same effect as [collapseToStart].
   void dropBackWhile(bool Function(String) test);
 
-  /// Creates a new [Character] sequence by replacing the current range.
+  /// Replaces the current range with [replacement] and returns the result.
   ///
-  /// Replaces the current range in [source] with [replacement] and
-  /// creates a new [Characters] of the resulting string.
-  /// Returns a new [CharacterRange] on the new [Characters] instance
+  /// Replaces the current range in [source] with [replacement]
+  /// and returns a range of the resulting characters
   /// which contains the replacement characters.
   ///
-  /// Since the inserted characters
-  /// may combine with the preceding or following code points,
-  /// the returned range may extend into into the code points
-  /// before and after the inserted replacement.
+  /// The inserted characters may combine with
+  /// the preceding or following code points,
+  /// so that the start and end of the original range
+  /// are no longer grapheme cluster boundaries.
+  /// In that case, the returned range may extend into into the code points
+  /// before and after the original range.
   CharacterRange replaceRange(Characters replacement);
 
-  /// Replaces all occurrences of [pattern] in the range with [replacement].
+  /// Replaces [pattern] in the current range with [replacement].
   ///
-  /// Replaces the first occurrence of [pattern] in the range, then repeatedly
-  /// finds and replaces the next occurrence which does not overlap with
-  /// the earlier, already replaced, occurrence.
+  /// Replaces all occurrences of [pattern] in the current range with
+  /// [replacement], unless they overlap with an earlier occurrence of
+  /// [pattern] which was replaced.
+  /// Then returns a range on the resulting characters
+  /// which contains all inserted replacement characters
+  /// and any remaining characters of the original range.
   ///
-  /// Returns new [CharacterRange] instance on this [Characters] instance
-  /// which contains all of the characters of the current range after replacements,
-  /// but which may also contain code points before
-  /// and after the current range, in case the replacement characters
-  /// combine with those characters.
+  /// The inserted characters may combine with
+  /// the preceding or following code points,
+  /// so that the start and end of the original range
+  /// are no longer grapheme cluster boundaries.
+  /// In that case, the returned range may extend into into the code points
+  /// before and after the original range.
   ///
-  /// Returns `null` if there are no occurrences of [pattern] in the current range.
+  /// Returns `null` if there are no occurrences of [pattern]
+  /// in the current range.
   CharacterRange /*?*/ replaceAll(Characters pattern, Characters replacement);
 
   /// Replaces the first occurrence of [pattern] with [replacement].
   ///
   /// Finds the first occurrence of [pattern] in the current range,
-  /// then replaces that occurrence with [replacement] and returns
-  /// creates a new [Characters] of that string.
+  /// then replaces that occurrence with [replacement].
+  /// Then returns a range on the resulting characters
+  /// which contains the inserted replacement characters
+  /// and any remaining characters of the original range.
   ///
-  /// Returns new [CharacterRange] instance on this [Characters] instance
-  /// which contains all of the characters of the current range after replacement,
-  /// but which may also contain code points before
-  /// and after the current range, in case the replacement characters
-  /// combine with those characters.
+  /// The inserted characters may combine with
+  /// the preceding or following code points,
+  /// so that the start and end of the original range
+  /// are no longer grapheme cluster boundaries.
+  /// In that case, the returned range may extend into into the code points
+  /// before and after the original range.
   ///
-  /// Returns `null` if there are no occurrences of [pattern] in the current range.
+  /// Returns `null` if there are no occurrences of [pattern]
+  /// in the current range.
   CharacterRange /*?*/ replaceFirst(Characters pattern, Characters replacement);
 
   /// Whether the current range starts with [characters].
