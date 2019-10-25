@@ -10,7 +10,7 @@ main() {
   print('String.length: ${hi.length}');
   print('Characters.length: ${Characters(hi).length}\n');
 
-  // Skip last 1 characters.
+  // Skip last character.
   print('String.substring: "${hi.substring(0, hi.length - 1)}"');
   print('Characters.skipLast: "${Characters(hi).skipLast(1)}"\n');
 
