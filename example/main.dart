@@ -12,7 +12,7 @@ main() {
 
   // Skip last 1 characters.
   print('String.substring: "${hi.substring(0, hi.length - 1)}"');
-  print('Characters.skipLast: "${Characters(hi).skipLast(2)}"\n');
+  print('Characters.skipLast: "${Characters(hi).skipLast(1)}"\n');
 
   // Replace characters.
   Characters newHi =
