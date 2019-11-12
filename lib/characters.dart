@@ -6,3 +6,4 @@
 library characters;
 
 export "src/characters.dart";
+export "src/extensions.dart";
