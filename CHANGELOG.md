@@ -9,7 +9,7 @@
   print('The first character is: ' + myString.characters.take(1))
   ```
 
-* Update Dart SDK dependency to Dart 2.6.0
+* Updated Dart SDK dependency to Dart 2.6.0
 
 ## 0.3.1
 
