@@ -6,7 +6,7 @@
   of the string:
 
   ```dart
-  print('The first character is: ' + myString.characters.take(1))
+  print('The first character is: ' + myString.characters.first)
   ```
 
 * Updated Dart SDK dependency to Dart 2.6.0
