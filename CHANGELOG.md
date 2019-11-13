@@ -2,12 +2,13 @@
 
 ## 0.4.0
 
-* Add an extension method on String to allow easy creation of Characters from
-  existing Strings:
+* Added an extension method on `String` to allow easy access to the `Characters`
+  of the string:
 
-    ```dart
-    print('The first character is: ' + myString.characters.take(1))
-    ```
+  ```dart
+  print('The first character is: ' + myString.characters.take(1))
+  ```
+
 * Update Dart SDK dependency to Dart 2.6.0
 
 ## 0.3.1
