@@ -194,7 +194,7 @@ abstract class Characters implements Iterable<String> {
   ///
   /// Finds each occurrence of [pattern], which does not overlap with
   /// a previously found occurrence, then the non-matched characters
-  /// before, after and between the matches are provided in first-to-last
+  /// before, after, and between the matches are provided in first-to-last
   /// position order.
 
   /// If [pattern] is empty, the character sequence is split into separate
@@ -706,6 +706,7 @@ abstract class CharacterRange implements Iterator<String> {
   /// only the first `maxParts - 1` occurrences of [pattern] are found
   /// and split at.
   /// Any further occurrences will be included in the last part.
+  ///
   /// Example:
   /// ```dart
   /// var c = "abracadabra".characters.dropFirst().dropLast();
