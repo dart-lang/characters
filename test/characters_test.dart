@@ -12,9 +12,9 @@ import "src/unicode_tests.dart";
 import "src/unicode_grapheme_tests.dart";
 import "src/various_tests.dart";
 
-Random random;
+late Random random;
 
-void main([List<String> args]) {
+void main([List<String>? args]) {
   // Ensure random seed is part of every test failure message,
   // and that it can be reapplied for testing.
   var seed = (args != null && args.isNotEmpty)
@@ -45,9 +45,9 @@ void main([List<String> args]) {
       expect(cs.skipWhile((x) => x != " ").toString(), " $flag!");
       expect(cs.skipLastWhile((x) => x != " ").toString(), "Hi ");
 
-      expect(cs.findFirst(gc("")).moveBack(), false);
-      expect(cs.findFirst(gc(flag)).current, flag);
-      expect(cs.findLast(gc(flag)).current, flag);
+      expect(cs.findFirst(gc(""))!.moveBack(), false);
+      expect(cs.findFirst(gc(flag))!.current, flag);
+      expect(cs.findLast(gc(flag))!.current, flag);
       expect(cs.iterator.moveNext(), true);
       expect(cs.iterator.moveBack(), false);
       expect((cs.iterator..moveNext()).current, "H");
@@ -477,7 +477,7 @@ void testParts(
 
     var cs2 = cs.replaceAll(c, gc(""));
     var cs3 = cs.replaceFirst(c, gc(""));
-    var cs4 = cs.findFirst(c).replaceRange(gc("")).source;
+    var cs4 = cs.findFirst(c)!.replaceRange(gc("")).source;
     var cse = gc("$a$b$d$e");
     expect(cs2, cse);
     expect(cs3, cse);
@@ -497,7 +497,7 @@ void testParts(
     expect("$b$a", it.current);
     it.expandTo(b + a);
     expect("$b$a$d$b$a", it.current);
-    var cs10 = it.replaceAll(b + a, e + e);
+    var cs10 = it.replaceAll(b + a, e + e)!;
     expect(cs10.currentCharacters, e + e + d + e + e);
     expect(cs10.source, gc("$a$c$e$e$d$e$e"));
     var cs11 = it.replaceRange(e);
@@ -575,7 +575,7 @@ void testParts(
     expect(cs.endsWith(b), false);
     expect(cs.endsWith(a), false);
 
-    it = cs.findFirst(b + c);
+    it = cs.findFirst(b + c)!;
     expect(it.startsWith(gc("")), true);
     expect(it.startsWith(b), true);
     expect(it.startsWith(b + c), true);
@@ -614,31 +614,31 @@ void testParts(
     var r = c.replaceAll(pattern, non);
     expect(r, otr + cr + lf + pic + zwj + pic + otr);
     var ci = c.iterator..moveNextAll();
-    var ri = ci.replaceAll(pattern, non);
+    var ri = ci.replaceAll(pattern, non)!;
     expect(ri.currentCharacters, otr + cr + lf + pic + zwj + pic + otr);
     ci.dropFirst();
     ci.dropLast();
     expect(ci.currentCharacters, cr + pattern + lf + pic + pattern + zwj + pic);
     expect(ci.currentCharacters.length, 7);
-    ri = ci.replaceAll(pattern, non);
+    ri = ci.replaceAll(pattern, non)!;
     expect(ri.currentCharacters, cr + lf + pic + zwj + pic);
     expect(ri.currentCharacters.length, 2);
     ci.dropFirst();
     ci.dropLast(5);
     expect(ci.currentCharacters, pattern);
-    ri = ci.replaceAll(pattern, non);
+    ri = ci.replaceAll(pattern, non)!;
     expect(ri.currentCharacters, cr + lf);
     ci.moveNext(2);
     ci.moveNext(1);
     expect(ci.currentCharacters, pattern);
-    ri = ci.replaceAll(pattern, non);
+    ri = ci.replaceAll(pattern, non)!;
     expect(ri.currentCharacters, pic + zwj + pic);
 
     c = otr + pic + ext + pattern + pic + ext + otr;
     expect(c.length, 5);
     ci = c.iterator..moveTo(pattern);
     expect(ci.currentCharacters, pattern);
-    ri = ci.replaceAll(pattern, zwj);
+    ri = ci.replaceAll(pattern, zwj)!;
     expect(ri.currentCharacters, pic + ext + zwj + pic + ext);
 
     c = reg + pattern + reg + reg;
