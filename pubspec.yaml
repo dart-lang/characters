@@ -38,7 +38,6 @@ dependency_overrides:
   meta:
     git:
       url: git://github.com/dart-lang/sdk.git
-      ref: null_safety-pkgs
       path: pkg/meta
   path:
     git:
