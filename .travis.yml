@@ -13,7 +13,7 @@ jobs:
       name: "Analyze (with experiment flag)"
       dart: dev
       os: linux
-      script: dartanalyzer --enable-experiment=non-nullable --fatal-warnings --fatal-infos
+      script: dartanalyzer --enable-experiment=non-nullable --fatal-warnings --fatal-infos .
     - stage: analyze_and_format
       name: "Format"
       dart: dev
