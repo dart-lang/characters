@@ -25,6 +25,8 @@ dependency_overrides:
     git:
       url: git://github.com/dart-lang/charcode.git
       ref: null_safety
+  collection:
+    git: git://github.com/dart-lang/collection.git
   js:
     git:
       url: git://github.com/dart-lang/sdk.git
