@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.1.0-nnbd
+## 1.1.0-nullsafety
 
 * Make package null safe.
 
