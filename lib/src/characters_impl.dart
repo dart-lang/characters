@@ -778,8 +778,7 @@ class StringCharacterRange implements CharacterRange {
   }
 
   @override
-  CharacterRange? replaceFirst(
-      Characters pattern, Characters replacement) {
+  CharacterRange? replaceFirst(Characters pattern, Characters replacement) {
     String patternString = pattern.string;
     String replacementString = replacement.string;
     String replaced;
