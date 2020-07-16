@@ -1,4 +1,6 @@
-# Changelog
+## 1.1.0-nullsafety.1
+
+* Allow the 2.9.x stable sdk.
 
 ## 1.1.0-nullsafety
 
