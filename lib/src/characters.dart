@@ -342,8 +342,8 @@ abstract class CharacterRange implements Iterator<String> {
   /// Otherwise, the range will contain the characters
   /// of the substring from [startIndex] to [endIndex],
   /// extended so that it contains entire characters of the original [string].
-  factory CharacterRange.at(String string, int startIndex, [int? endIndex])
-      = StringCharacterRange.at;
+  factory CharacterRange.at(String string, int startIndex, [int? endIndex]) =
+      StringCharacterRange.at;
 
   /// The character sequence that this range is a sub-sequence of.
   Characters get source;
