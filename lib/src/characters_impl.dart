@@ -253,22 +253,16 @@ class StringCharacters extends Iterable<String> implements Characters {
   Characters characterAt(int position) {
     var breaks = Breaks(string, 0, string.length, stateSoTNoBreak);
     var start = 0;
-    findIndices:
-    {
-      while (position > 0) {
-        position--;
-        var start = breaks.nextBreak();
-        if (start < 0) {
-          break findIndices;
-        }
-      }
-      var end = breaks.nextBreak();
-      if (end < 0) break findIndices;
-      ;
-      if (start == 0 && end == string.length) return this;
-      return StringCharacters(string.substring(start, end));
+
+    while (position > 0) {
+      position--;
+      var start = breaks.nextBreak();
+      if (start < 0) throw StateError("No element");
     }
-    throw StateError("No element");
+    var end = breaks.nextBreak();
+    if (end < 0) throw StateError("No element");
+    if (start == 0 && end == string.length) return this;
+    return StringCharacters(string.substring(start, end));
   }
 
   @override
