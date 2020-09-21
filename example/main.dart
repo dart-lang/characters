@@ -19,7 +19,6 @@ void main() {
   print('Skipping last character: "${hi.characters.skipLast(1)}"\n');
 
   // Replace characters.
-  var newHi =
-      hi.characters.replaceAll('🇩🇰'.characters, '🇺🇸'.characters);
+  var newHi = hi.characters.replaceAll('🇩🇰'.characters, '🇺🇸'.characters);
   print('Change flag: "$newHi"');
 }
