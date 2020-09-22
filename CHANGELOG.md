@@ -1,4 +1,4 @@
-## 1.2.0-nullsafety
+## 1.1.0-nullsafety.3
 
 * Added `stringBeforeLength` and `stringAfterLength` to `CharacterRange`.
 * Added `CharacterRange.at` constructor.
