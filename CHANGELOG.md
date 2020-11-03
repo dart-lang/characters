@@ -1,7 +1,7 @@
 ## 1.1.0-nullsafety.5
 
-* Use 2.12.0-0 lower bound and 3.0.0 upper bound SDK to work around pub
-  limitations.
+* Update sdk constraints to `>=2.12.0-0 <3.0.0` based on beta release
+  guidelines.
 
 ## 1.1.0-nullsafety.4
 
