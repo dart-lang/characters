@@ -1,3 +1,8 @@
+## 1.1.0-nullsafety.5
+
+* Use 2.12.0-0 lower bound and 3.0.0 upper bound SDK to work around pub
+  limitations.
+
 ## 1.1.0-nullsafety.4
 
 * Allow the 2.12 dev SDKs.
