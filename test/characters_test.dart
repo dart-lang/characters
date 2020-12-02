@@ -8,9 +8,9 @@ import "package:test/test.dart";
 
 import "package:characters/characters.dart";
 
-import "../src/unicode_tests.dart";
-import "../src/unicode_grapheme_tests.dart";
-import "../src/various_tests.dart";
+import "src/unicode_tests.dart";
+import "src/unicode_grapheme_tests.dart";
+import "src/various_tests.dart";
 
 late Random random;
 
