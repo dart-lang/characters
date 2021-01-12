@@ -1,5 +1,5 @@
 [![pub package](https://img.shields.io/pub/v/characters.svg)](https://pub.dev/packages/characters)
-[![Build Status](https://github.com/dart-lang/characters/workflows/Dart%20CI/badge.svg)](https://github.com/dart-lang/characters/actions?query=workflow%3A"Dart+CI")
+[![Build Status](https://github.com/dart-lang/characters/workflows/Dart%20CI/badge.svg)](https://github.com/dart-lang/characters/actions?query=workflow%3A"Dart+CI"+branch%3Amaster)
 
 [`Characters`][Characters] are strings viewed as
 sequences of **user-perceived character**s,
