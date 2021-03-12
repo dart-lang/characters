@@ -14,13 +14,13 @@ env:
 
 jobs:
   # Check code formatting and static analysis on a single OS (linux)
-  # against Dart dev & stable.
+  # against dev, stable, and 2.12.0 (the package's lower bound).
   analyze:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        sdk: [dev, stable]
+        sdk: [dev, stable, 2.12.0]
     steps:
       - uses: actions/checkout@v2
       - uses: dart-lang/setup-dart@v1.0
@@ -38,7 +38,7 @@ jobs:
 
   # Run tests on a matrix consisting of two dimensions:
   # 1. OS: ubuntu-latest
-  # 2. Release channel: dev, and 2.12.0 (the package's lower bound)
+  # 2. Release channel: dev, stable, and 2.12.0 (the package's lower bound)
   test:
     needs: analyze
     runs-on: ${{ matrix.os }}
@@ -46,7 +46,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        sdk: [dev, 2.12.0]
+        sdk: [dev, stable, 2.12.0]
     steps:
       - uses: actions/checkout@v2
       - uses: dart-lang/setup-dart@v1.0
