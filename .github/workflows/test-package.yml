@@ -20,12 +20,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        sdk: [dev]
+        sdk: [dev, stable]
     steps:
       - uses: actions/checkout@v2
       - uses: dart-lang/setup-dart@v1.0
         with:
-          channel: ${{ matrix.sdk }}
+          sdk: ${{ matrix.sdk }}
       - id: install
         name: Install dependencies
         run: dart pub get
@@ -38,7 +38,7 @@ jobs:
 
   # Run tests on a matrix consisting of two dimensions:
   # 1. OS: ubuntu-latest
-  # 2. Release channel: dev, stable
+  # 2. Release channel: dev, and 2.12.0 (the package's lower bound)
   test:
     needs: analyze
     runs-on: ${{ matrix.os }}
@@ -46,12 +46,12 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        sdk: [dev, stable]
+        sdk: [dev, 2.12.0]
     steps:
       - uses: actions/checkout@v2
       - uses: dart-lang/setup-dart@v1.0
         with:
-          channel: ${{ matrix.sdk }}
+          sdk: ${{ matrix.sdk }}
       - id: install
         name: Install dependencies
         run: dart pub get
