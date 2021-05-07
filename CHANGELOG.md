@@ -1,3 +1,10 @@
+## 1.2.0
+
+* Changes the argument type of `Characters.contains` to (covariant) `String`.
+  The implementation still accepts `Object?`, so it can be cast to
+  `Iterable<Object?>`, but you get warned if you try to call directly with a
+  non-`String`.
+
 ## 1.1.1-dev
 
 * Switched from using lints in package:pedantic to package:lints.

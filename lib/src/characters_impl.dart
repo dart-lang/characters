@@ -116,14 +116,16 @@ class StringCharacters extends Iterable<String> implements Characters {
   }
 
   @override
-  bool contains(Object? element) {
-    if (element is String) {
-      if (element.isEmpty) return false;
-      var next =
-          Breaks(element, 0, element.length, stateSoTNoBreak).nextBreak();
-      if (next != element.length) return false;
-      // [element] is single grapheme cluster.
-      return _indexOf(string, element, 0, string.length) >= 0;
+  // ignore: avoid_renaming_method_parameters
+  bool contains(Object? singleCharacterString) {
+    if (singleCharacterString is String) {
+      if (singleCharacterString.isEmpty) return false;
+      var next = Breaks(singleCharacterString, 0, singleCharacterString.length,
+              stateSoTNoBreak)
+          .nextBreak();
+      if (next != singleCharacterString.length) return false;
+      // [singleCharacterString] is single grapheme cluster.
+      return _indexOf(string, singleCharacterString, 0, string.length) >= 0;
     }
     return false;
   }
