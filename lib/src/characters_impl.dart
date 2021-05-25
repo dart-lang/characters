@@ -122,7 +122,7 @@ class StringCharacters extends Iterable<String> implements Characters {
       var next =
           Breaks(element, 0, element.length, stateSoTNoBreak).nextBreak();
       if (next != element.length) return false;
-      // [other] is single grapheme cluster.
+      // [element] is single grapheme cluster.
       return _indexOf(string, element, 0, string.length) >= 0;
     }
     return false;
