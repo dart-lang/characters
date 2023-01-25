@@ -3,8 +3,8 @@
 // BSD-style license that can be found in the LICENSE file.
 
 // Generated code. Do not edit.
-// Generated from [https://unicode.org/Public/UCD/latest/ucd/auxiliary/GraphemeBreakProperty.txt](../../third_party/Unicode_Consortium/GraphemeBreakProperty.txt)
-// and [https://unicode.org/Public/UCD/latest/ucd/emoji/emoji-data.txt](../../third_party/Unicode_Consortium/emoji_data.txt).
+// Generated from [https://unicode.org/Public/15.0.0/ucd/auxiliary/GraphemeBreakProperty.txt](../../third_party/Unicode_Consortium/GraphemeBreakProperty.txt)
+// and [https://unicode.org/Public/15.0.0/ucd/emoji/emoji-data.txt](../../third_party/Unicode_Consortium/emoji_data.txt).
 // Licensed under the Unicode Inc. License Agreement
 // (https://www.unicode.org/license.txt, ../../third_party/third_party/Unicode_Consortium/UNICODE_LICENSE.txt)
 
