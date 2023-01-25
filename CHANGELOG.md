@@ -1,3 +1,7 @@
+## 1.3.0
+
+* Updated to use Unicode 15.0.0.
+
 ## 1.2.0
 
 * Fix `Characters.where` which unnecessarily did the iteration and test twice.
