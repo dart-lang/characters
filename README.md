@@ -131,3 +131,8 @@ Characters firstTagCharacters(Characters source) {
 [String]: https://api.dart.dev/stable/2.0.0/dart-core/String-class.html	"String class"
 [Uint16List]: https://api.dart.dev/stable/2.0.0/dart-typed_data/Uint16List-class.html	"Uint16List class"
 [Uint8List]: https://api.dart.dev/stable/2.0.0/dart-typed_data/Uint8List-class.html	"Uint8List class"
+
+## Publishing automation
+
+For information about our publishing automation and release process, see
+https://github.com/dart-lang/ecosystem/wiki/Publishing-automation.
