@@ -9,7 +9,7 @@ import "../test/src/text_samples.dart";
 import "../test/src/unicode_grapheme_tests.dart";
 import "../test/src/various_tests.dart";
 
-// Low-level benchmark of the grpaheme cluster step functions.
+// Low-level benchmark of the grapheme cluster step functions.
 
 void main(List<String> args) {
   int count = 5;
