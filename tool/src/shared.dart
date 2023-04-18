@@ -3,8 +3,8 @@
 // BSD-style license that can be found in the LICENSE file.
 
 import "dart:async";
-import "dart:io";
 import "dart:convert";
+import "dart:io";
 
 // Shared tools used by other libraries.
 
@@ -14,13 +14,13 @@ import "dart:convert";
 Future<String> fetch(String location,
     {File? targetFile, bool forceLoad = false}) async {
   if (targetFile == null) {
-    String safeLocation = location.replaceAll(RegExp(r"[^\w]+"), "-");
+    var safeLocation = location.replaceAll(RegExp(r'[^\w]+'), '-');
     targetFile = File(path(Directory.systemTemp.path, safeLocation));
   }
   if (!forceLoad && targetFile.existsSync()) {
     return targetFile.readAsString();
   }
-  Uri uri = Uri.parse(location);
+  var uri = Uri.parse(location);
   String contents;
   if (uri.isScheme("file")) {
     contents = File.fromUri(uri).readAsStringSync();
@@ -83,7 +83,7 @@ String packageRoot = _findRootDir().path;
 Directory _findRootDir() {
   var dir = Directory.current;
   while (true) {
-    var pubspec = File(dir.path + Platform.pathSeparator + "pubspec.yaml");
+    var pubspec = File("${dir.path}${Platform.pathSeparator}pubspec.yaml");
     if (pubspec.existsSync()) return dir;
     var parent = dir.parent;
     if (dir.path == parent.path) {

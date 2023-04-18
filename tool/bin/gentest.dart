@@ -21,7 +21,7 @@ const testFile = "test/src/unicode_grapheme_tests.dart";
 void main(List<String> args) async {
   var flags = parseArgs(args, "gentest");
 
-  File? output = flags.dryrun
+  var output = flags.dryrun
       ? null
       : flags.targetFile ?? File(path(packageRoot, testFile));
 
@@ -35,7 +35,7 @@ void main(List<String> args) async {
     }
   }
 
-  generateTests(output,
+  await generateTests(output,
       update: flags.update, verbose: flags.verbose, dryrun: flags.dryrun);
 }
 
@@ -52,9 +52,10 @@ Future<void> generateTests(File? output,
     ..writeln("// Licensed under the Unicode Inc. License Agreement")
     ..writeln("// (${licenseFile.sourceLocation}, "
         "../../third_party/${licenseFile.targetLocation})")
+    ..writeln("// ignore_for_file: lines_longer_than_80_chars")
     ..writeln();
 
-  List<String> texts = await Future.wait([
+  var texts = await Future.wait([
     graphemeTestData.load(checkForUpdate: update),
     emojiTestData.load(checkForUpdate: update)
   ]);
@@ -71,15 +72,14 @@ Future<void> generateTests(File? output,
     var tokensRE = RegExp(r"[÷×]|[\dA-F]+");
     var writer = StringLiteralWriter(buffer, lineLength: 9999, escape: _escape);
     for (var line in lineRE.allMatches(test)) {
-      List<String> tokens =
-          tokensRE.allMatches(line[0]!).map((x) => x[0]!).toList();
+      var tokens = tokensRE.allMatches(line[0]!).map((x) => x[0]!).toList();
       assert(tokens.first == "÷");
       assert(tokens.last == "÷");
 
-      List<List<int>> parts = [];
-      List<int> chars = [];
-      for (int i = 1; i < tokens.length; i += 2) {
-        int cp = int.parse(tokens[i], radix: 16);
+      var parts = <List<int>>[];
+      var chars = <int>[];
+      for (var i = 1; i < tokens.length; i += 2) {
+        var cp = int.parse(tokens[i], radix: 16);
         chars.add(cp);
         if (tokens[i + 1] == "÷") {
           parts.add(chars);
@@ -87,7 +87,7 @@ Future<void> generateTests(File? output,
         }
       }
       buffer.write("  [");
-      for (int i = 0; i < parts.length; i++) {
+      for (var i = 0; i < parts.length; i++) {
         if (i > 0) buffer.write(", ");
         writer.start(0);
         parts[i].forEach(writer.add);
@@ -110,7 +110,7 @@ Future<void> generateTests(File? output,
       buffer.write("  [");
       writer.start();
       for (var token in tokensRE.allMatches(line[1]!)) {
-        int value = int.parse(token[0]!, radix: 16);
+        var value = int.parse(token[0]!, radix: 16);
         writer.add(value);
       }
       writer.end();

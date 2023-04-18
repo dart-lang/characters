@@ -18,14 +18,14 @@ import "indirect_table.dart";
 /// to the position in the new table.
 IndirectTable combineLists(List<Uint8List> input) {
   // See how much chunks are overlapping.
-  int chunkCount = input.length;
+  var chunkCount = input.length;
   var graph = Graph(chunkCount + 1);
   for (var i = 0; i < input.length; i++) {
     var firstChunk = input[i];
     for (var j = 0; j < input.length; j++) {
       if (i == j) continue;
       var secondChunk = input[j];
-      int overlap = _overlap(firstChunk, secondChunk);
+      var overlap = _overlap(firstChunk, secondChunk);
       graph.setWeight(i, j, secondChunk.length - overlap);
     }
   }
@@ -34,7 +34,7 @@ IndirectTable combineLists(List<Uint8List> input) {
 
   // First create a cycle through the one extra node (index `chunkCount`).
   var path = List<int>.filled(chunkCount + 2, chunkCount);
-  for (int i = 0; i <= chunkCount; i++) {
+  for (var i = 0; i <= chunkCount; i++) {
     path[i + 1] = i;
   }
 
@@ -44,7 +44,7 @@ IndirectTable combineLists(List<Uint8List> input) {
   assert(path.last == chunkCount);
   assert(path.first == chunkCount);
 
-  int chunkLength =
+  var chunkLength =
       input[path[1]].length + graph.pathWeight(path, 1, path.length - 2);
 
   var chunkData = Uint8List(chunkLength);
@@ -55,12 +55,12 @@ IndirectTable combineLists(List<Uint8List> input) {
     var firstChunk = input[prevChunkNum];
     chunkData.setRange(0, firstChunk.length, firstChunk);
     entries[prevChunkNum] = TableEntry(0, 0, firstChunk.length);
-    int index = firstChunk.length;
-    for (int i = 2; i < path.length - 1; i++) {
+    var index = firstChunk.length;
+    for (var i = 2; i < path.length - 1; i++) {
       var nextChunkNum = path[i];
       var chunk = input[nextChunkNum];
-      int nonOverlap = graph.weight(prevChunkNum, nextChunkNum);
-      int overlap = chunk.length - nonOverlap;
+      var nonOverlap = graph.weight(prevChunkNum, nextChunkNum);
+      var overlap = chunk.length - nonOverlap;
       entries[nextChunkNum] = TableEntry(0, index - overlap, chunk.length);
       chunkData.setRange(index, index + nonOverlap, chunk, overlap);
       index += nonOverlap;
@@ -72,12 +72,12 @@ IndirectTable combineLists(List<Uint8List> input) {
 
 /// Finds how much overlap there is between [first] and [second] in that order.
 int _overlap(Uint8List first, Uint8List second) {
-  int maxOverlap =
+  var maxOverlap =
       (first.length < second.length ? first.length : second.length) - 1;
   outer:
-  for (int overlap = maxOverlap; overlap > 0; overlap--) {
-    int firstStart = first.length - overlap;
-    for (int j = 0; j < overlap; j++) {
+  for (var overlap = maxOverlap; overlap > 0; overlap--) {
+    var firstStart = first.length - overlap;
+    for (var j = 0; j < overlap; j++) {
       if (first[firstStart + j] != second[j]) continue outer;
     }
     return overlap;

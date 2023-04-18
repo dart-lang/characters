@@ -14,11 +14,12 @@ import "data_files.dart";
 
 Future<Uint8List> loadGraphemeCategories(
     {bool update = false, bool verbose = false}) async {
-  List<String> dataFiles = await Future.wait([
+  var dataFiles = await Future.wait([
     graphemeBreakPropertyData.load(checkForUpdate: update),
     emojiData.load(checkForUpdate: update),
     // This data used to be in:
     // https://www.unicode.org/Public/12.0.0/ucd/auxiliary/GraphemeBreakProperty-12.0.0d16.txt
+    // Make sure it's included.
     Future.value(
         "D800..DFFF    ; Control # Cc       <control-D800>..<control-DFFF>\n"),
   ]);
@@ -52,7 +53,7 @@ final categoryByName = {
 Uint8List _parseCategories(List<String> files, {required bool verbose}) {
   var result = Uint8List(0x110000);
   result.fillRange(0, result.length, categoryOther);
-  int count = 0;
+  var count = 0;
   var categoryCount = <String, int>{};
   var categoryMin = <String, int>{
     for (var category in categoryByName.keys) category: 0x10FFFF
@@ -60,11 +61,11 @@ Uint8List _parseCategories(List<String> files, {required bool verbose}) {
   int min(int a, int b) => a < b ? a : b;
   for (var file in files) {
     for (var match in _tableRE.allMatches(file)) {
-      int from = int.parse(match[1]!, radix: 16);
-      int to = match[2] == null ? from : int.parse(match[2]!, radix: 16);
-      String category = match[3]!;
+      var from = int.parse(match[1]!, radix: 16);
+      var to = match[2] == null ? from : int.parse(match[2]!, radix: 16);
+      var category = match[3]!;
       assert(from <= to);
-      int? categoryCode = categoryByName[category];
+      var categoryCode = categoryByName[category];
       if (categoryCode != null) {
         assert(result.getRange(from, to + 1).every((x) => x == categoryOther));
         result.fillRange(from, to + 1, categoryCode);

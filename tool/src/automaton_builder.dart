@@ -12,6 +12,9 @@ import "string_literal_writer.dart";
 // Builder for state automata used to find
 // next/previous grapheme cluster break.
 
+// The automaton states are described below, and the code builds tables
+// for those automatons, then writes the table bytes as a string literal.
+
 //////////////////////////////////////////////////////////////////////////////
 // Transition table for grapheme cluster break automaton.
 // For each previous state and each input character category,
@@ -20,7 +23,7 @@ import "string_literal_writer.dart";
 // and then the output state.
 //
 // We do not care that there is no break between a start-of-text and
-// and end-of-text (and empyt text). We could handle that with one extra
+// and end-of-text (and empty text). We could handle that with one extra
 // state, but it will never matter for the code using this table.
 //
 // Cat  : State
@@ -437,7 +440,7 @@ void _writeTable(Uint8List table, List<String> stateNames,
       } else if (value & stateNoBreak == 0) {
         prefix = "!";
       }
-      String stateName = stateNames[value >> 4];
+      var stateName = stateNames[value >> 4];
       // EoT is marker for unreachable states.
       if ((value & 0xF0) == ignoreState) stateName = " - ";
       buf

@@ -16,37 +16,37 @@
 /// Edges are pairs of vertices.
 class Graph {
   /// Number of vertices.
-  final int vertices;
+  final int vertexCount;
 
-  /// Table of weights, a list of length `vertices`*`vertices`.
+  /// Table of weights, a list of length `vertexCount`*`vertexCount`.
   final List<int> _table;
 
-  /// Creates a new complete graph with [vertices] vertices.
+  /// Creates a new complete graph with [vertexCount] vertices.
   ///
   /// The initial weights on all edges are [initialWeight].
-  Graph(this.vertices, [int initialWeight = 0])
-      : _table = List<int>.filled(vertices * vertices, initialWeight);
+  Graph(this.vertexCount, [int initialWeight = 0])
+      : _table = List<int>.filled(vertexCount * vertexCount, initialWeight);
 
   /// Update the weight on the edges from [fromVertex] to [toVertex].
   void setWeight(int fromVertex, int toVertex, int newWeight) {
-    _table[fromVertex * vertices + toVertex] = newWeight;
+    _table[fromVertex * vertexCount + toVertex] = newWeight;
   }
 
   /// The weight of the edge from [fromVertex] to [toVertex].
   int weight(int fromVertex, int toVertex) =>
-      _table[fromVertex * vertices + toVertex];
+      _table[fromVertex * vertexCount + toVertex];
 
-  /// The cummulative weight of the (sub-)path from `path[from]` to `path[to]`.
+  /// The cumulative weight of the (sub-)path from `path[from]` to `path[to]`.
   ///
   /// If [to] is less than [from], the sub-path is traversed in reverse.
   /// The values in `path` should be vertices in this graph.
   int pathWeight(List<int> path, int from, int to) {
-    int weight = 0;
-    int cursor = path[from];
-    int step = from <= to ? 1 : -1;
-    for (int i = from; i != to;) {
+    var weight = 0;
+    var cursor = path[from];
+    var step = from <= to ? 1 : -1;
+    for (var i = from; i != to;) {
       i += step;
-      int next = path[i];
+      var next = path[i];
       weight += this.weight(cursor, next);
       cursor = next;
     }
@@ -60,77 +60,88 @@ class Graph {
 ///
 /// The [cycle] must have the same node as first and last element.
 ///
-/// This is an implementation of step of 3-opt, a simple algorithm to
+/// This is an implementation of one step of 3-opt, a simple algorithm to
 /// approximate an asymmetric traveling salesman problem (ATSP).
 /// It splits the cycle into three parts and then find the best recombination
 /// of the parts, each potentially reversed.
 bool opt3(Graph graph, List<int> cycle) {
   // Perhaps optimize the weight computations by creating
-  // a single array of cummulative weights, so any range can be computed
+  // a single array of cumulative weights, so any range can be computed
   // as a difference between two points in that array.
-  for (int i = 1; i < cycle.length; i++) {
-    int wA = cycle[i - 1];
-    int wB = cycle[i];
-    int wAB = graph.weight(wA, wB);
-    int wBA = graph.weight(wB, wA);
-    int wZA = graph.pathWeight(cycle, 0, i - 1);
-    int wAZ = graph.pathWeight(cycle, i - 1, 0);
-    for (int j = i + 1; j < cycle.length; j++) {
-      int wC = cycle[j - 1];
-      int wD = cycle[j];
-      int wAC = graph.weight(wA, wC);
-      int wCA = graph.weight(wC, wA);
-      int wAD = graph.weight(wA, wD);
-      int wDA = graph.weight(wD, wA);
-      int wBD = graph.weight(wB, wD);
-      int wDB = graph.weight(wD, wB);
-      int wCD = graph.weight(wC, wD);
-      int wDC = graph.weight(wD, wC);
-      int wBC = graph.pathWeight(cycle, i, j - 1);
-      int wCB = graph.pathWeight(cycle, j - 1, i);
-      for (int k = j + 1; k < cycle.length; k++) {
-        int wE = cycle[k - 1];
-        int wF = cycle[k];
-        int wAE = graph.weight(wA, wE);
-        int wEA = graph.weight(wE, wA);
-        int wBE = graph.weight(wB, wE);
-        int wEB = graph.weight(wE, wB);
-        int wCE = graph.weight(wC, wE);
-        int wEC = graph.weight(wE, wC);
-        int wBF = graph.weight(wB, wF);
-        int wFB = graph.weight(wF, wB);
-        int wCF = graph.weight(wC, wF);
-        int wFC = graph.weight(wF, wC);
-        int wEF = graph.weight(wE, wF);
-        int wFE = graph.weight(wF, wE);
-        int wDF = graph.weight(wD, wF);
-        int wFD = graph.weight(wF, wD);
-        int wDE = graph.pathWeight(cycle, j, k - 1);
-        int wED = graph.pathWeight(cycle, k - 1, j);
-        int wFA = graph.pathWeight(cycle, k, cycle.length - 1) + wZA;
-        int wAF = graph.pathWeight(cycle, cycle.length - 1, k) + wAZ;
+  for (var i = 1; i < cycle.length; i++) {
+    // Find three cut points in the cycle, A|B, C|D, and E|F,
+    // then find the cumulative weights of each section
+    // B-C, C-D, and E-A, in both directions, as well as the
+    // weight between the end-points.
+    //
+    // with Z being used to represent the start/end of the list
+    // representation (so the A-F/F-A ranges cross over the cycle
+    // representation edges)
+    // Find the weights
+    var nodeA = cycle[i - 1];
+    var nodeB = cycle[i];
+    // Weight of one-step transition from A to B.
+    var wAB = graph.weight(nodeA, nodeB);
+    var wBA = graph.weight(nodeB, nodeA);
+    // Weight of entire path for start to A.
+    var pZA = graph.pathWeight(cycle, 0, i - 1);
+    var pAZ = graph.pathWeight(cycle, i - 1, 0);
+    for (var j = i + 1; j < cycle.length; j++) {
+      var nodeC = cycle[j - 1];
+      var nodeD = cycle[j];
+      var wAC = graph.weight(nodeA, nodeC);
+      var wCA = graph.weight(nodeC, nodeA);
+      var wAD = graph.weight(nodeA, nodeD);
+      var wDA = graph.weight(nodeD, nodeA);
+      var wBD = graph.weight(nodeB, nodeD);
+      var wDB = graph.weight(nodeD, nodeB);
+      var wCD = graph.weight(nodeC, nodeD);
+      var wDC = graph.weight(nodeD, nodeC);
+      var pBC = graph.pathWeight(cycle, i, j - 1);
+      var pCB = graph.pathWeight(cycle, j - 1, i);
+      for (var k = j + 1; k < cycle.length; k++) {
+        var nodeE = cycle[k - 1];
+        var nodeF = cycle[k];
+        var wAE = graph.weight(nodeA, nodeE);
+        var wEA = graph.weight(nodeE, nodeA);
+        var wBE = graph.weight(nodeB, nodeE);
+        var wEB = graph.weight(nodeE, nodeB);
+        var wCE = graph.weight(nodeC, nodeE);
+        var wEC = graph.weight(nodeE, nodeC);
+        var wBF = graph.weight(nodeB, nodeF);
+        var wFB = graph.weight(nodeF, nodeB);
+        var wCF = graph.weight(nodeC, nodeF);
+        var wFC = graph.weight(nodeF, nodeC);
+        var wEF = graph.weight(nodeE, nodeF);
+        var wFE = graph.weight(nodeF, nodeE);
+        var wDF = graph.weight(nodeD, nodeF);
+        var wFD = graph.weight(nodeF, nodeD);
+        var pDE = graph.pathWeight(cycle, j, k - 1);
+        var pED = graph.pathWeight(cycle, k - 1, j);
+        var pFA = graph.pathWeight(cycle, k, cycle.length - 1) + pZA;
+        var pAF = graph.pathWeight(cycle, cycle.length - 1, k) + pAZ;
 
-        // Find best recombine of the three sections B-C, D-E, F-A
-        // (possibly reversed).
-        // Since there are only two ways to order three-element cycles, and three
-        // parts that can be reversed, this gives 16 combinations.
-        int wABCDEF = wFA + wAB + wBC + wCD + wDE + wEF;
-        int wACBDEF = wFA + wAC + wCB + wBD + wDE + wEF;
-        int wABCEDF = wFA + wAB + wBC + wCE + wED + wDF;
-        int wACBEDF = wFA + wAC + wCB + wBE + wED + wDF;
-        int wFBCDEA = wAF + wFB + wBC + wCD + wDE + wEA;
-        int wFCBDEA = wAF + wFC + wCB + wBD + wDE + wEA;
-        int wFBCEDA = wAF + wFB + wBC + wCE + wED + wDA;
-        int wFCBEDA = wAF + wFC + wCB + wBE + wED + wDA;
-        int wADEBCF = wFA + wAD + wDE + wEB + wBC + wCF;
-        int wADECBF = wFA + wAD + wDE + wEC + wCB + wBF;
-        int wAEDBCF = wFA + wAE + wED + wDB + wBC + wCF;
-        int wAEDCBF = wFA + wAE + wED + wDC + wCB + wBF;
-        int wFDEBCA = wAF + wFD + wDE + wEB + wBC + wCA;
-        int wFDECBA = wAF + wFD + wDE + wEC + wCB + wBA;
-        int wFEDBCA = wAF + wFE + wED + wDB + wBC + wCA;
-        int wFEDCBA = wAF + wFE + wED + wDC + wCB + wBA;
-        int best = [
+        // Find best recombination of the three sections B-C, D-E, F-A,
+        // with each possibly reversed.
+        // Since there are only two ways to order three-element cycles,
+        // and three parts that can be reversed, this gives 16 combinations.
+        var wABCDEF = pFA + wAB + pBC + wCD + pDE + wEF;
+        var wACBDEF = pFA + wAC + pCB + wBD + pDE + wEF;
+        var wABCEDF = pFA + wAB + pBC + wCE + pED + wDF;
+        var wACBEDF = pFA + wAC + pCB + wBE + pED + wDF;
+        var wFBCDEA = pAF + wFB + pBC + wCD + pDE + wEA;
+        var wFCBDEA = pAF + wFC + pCB + wBD + pDE + wEA;
+        var wFBCEDA = pAF + wFB + pBC + wCE + pED + wDA;
+        var wFCBEDA = pAF + wFC + pCB + wBE + pED + wDA;
+        var wADEBCF = pFA + wAD + pDE + wEB + pBC + wCF;
+        var wADECBF = pFA + wAD + pDE + wEC + pCB + wBF;
+        var wAEDBCF = pFA + wAE + pED + wDB + pBC + wCF;
+        var wAEDCBF = pFA + wAE + pED + wDC + pCB + wBF;
+        var wFDEBCA = pAF + wFD + pDE + wEB + pBC + wCA;
+        var wFDECBA = pAF + wFD + pDE + wEC + pCB + wBA;
+        var wFEDBCA = pAF + wFE + pED + wDB + pBC + wCA;
+        var wFEDCBA = pAF + wFE + pED + wDC + pCB + wBA;
+        var best = min([
           wABCDEF,
           wACBDEF,
           wABCEDF,
@@ -147,7 +158,7 @@ bool opt3(Graph graph, List<int> cycle) {
           wFDECBA,
           wFEDBCA,
           wFEDCBA
-        ].reduce((a, b) => a < b ? a : b);
+        ]);
         if (best < wABCDEF) {
           // Reorder and reverse to match the (or a) best solution.
           if (best == wACBDEF) {
@@ -198,7 +209,7 @@ bool opt3(Graph graph, List<int> cycle) {
           } else if (best == wFEDCBA) {
             _reverse(cycle, 0, cycle.length - 1);
           } else {
-            throw "Unreachable";
+            throw AssertionError("Unreachable");
           }
           return true;
         }
@@ -211,10 +222,19 @@ bool opt3(Graph graph, List<int> cycle) {
 /// Reverses a slice of a list.
 void _reverse(List<int> list, int from, int to) {
   while (from < to) {
-    int tmp = list[from];
+    var tmp = list[from];
     list[from] = list[to];
     list[to] = tmp;
     from++;
     to--;
   }
+}
+
+int min(List<int> values) {
+  var result = values[0];
+  for (var i = 1; i < values.length; i++) {
+    var value = values[i];
+    if (value < result) result = value;
+  }
+  return result;
 }

@@ -57,7 +57,7 @@ class StringLiteralWriter {
   }
 
   void _writeEscape(int codeUnit) {
-    String? replacement = _escapeCache[codeUnit];
+    var replacement = _escapeCache[codeUnit];
     if (replacement == null) {
       if (codeUnit < 0x10) {
         if (codeUnit == "\b".codeUnitAt(0)) {
@@ -91,7 +91,7 @@ class StringLiteralWriter {
       } else if (codeUnit < 0x10000) {
         replacement = r"\u" + codeUnit.toRadixString(16);
       } else {
-        replacement = r"\u{" + codeUnit.toRadixString(16) + "}";
+        replacement = "\\u{${codeUnit.toRadixString(16)}}";
       }
       _escapeCache[codeUnit] = replacement;
     }

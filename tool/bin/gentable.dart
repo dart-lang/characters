@@ -10,9 +10,9 @@ import "../src/automaton_builder.dart";
 import "../src/data_files.dart";
 import "../src/grapheme_category_loader.dart";
 import "../src/indirect_table.dart";
-import "../src/table_builder.dart";
 import "../src/shared.dart";
 import "../src/string_literal_writer.dart";
+import "../src/table_builder.dart";
 
 // Generates tables used by the grapheme cluster breaking algorithm
 // and a state machine used to implement the algorithm.
@@ -29,8 +29,10 @@ import "../src/string_literal_writer.dart";
 // character and surrogate pairs, which gives us a natural
 // branch in the string parsing code.
 //
-// The an table is built which allows these chunks to overlap
-// and an indirection table pointing to the start of each chunk.
+// Then a single table is built containing all these chunks, but where
+// the chunks are allowed to overlap.
+// An indirection table points to the start of each chunk
+// in the larger table.
 //
 // Having many small chunks increases the size of the indirection table,
 // and large chunks reduces the chance of chunks being completely
@@ -53,9 +55,9 @@ const defaultVerbose = false;
 /// Default location for table file.
 const tableFile = "lib/src/grapheme_clusters/table.dart";
 
-/// Best values found for current tables.
-/// Update if better value found when updating data files.
-/// (May consider benchmark performance as well as size.)
+// Best values found for current tables.
+// Update if better value found when updating data files.
+// (May consider benchmark performance as well as size.)
 
 // TODO: Write out best sizes to a file after an update, and read them back
 // next time, instead of hardcoding in the source file.
@@ -63,13 +65,13 @@ const tableFile = "lib/src/grapheme_clusters/table.dart";
 // Chunk sizes must be powers of 2.
 const int defaultLowChunkSize = 64;
 
-/// 512 gives best size by 431b and no discernible performance difference
-/// from 1024 in benchmark.
+// 512 gives best size by 431b and no discernible performance difference
+// from 1024 in benchmark.
 const int defaultHighChunkSize = 512;
 
 void main(List<String> args) {
   var flags = parseArgs(args, "gentable", allowOptimize: true);
-  File? output = flags.dryrun
+  var output = flags.dryrun
       ? null
       : flags.targetFile ?? File(path(packageRoot, tableFile));
 
@@ -91,7 +93,7 @@ void main(List<String> args) {
 
 Future<void> generateTables(File? output,
     {bool update = false,
-    bool dryrun: false,
+    bool dryrun = false,
     bool optimize = false,
     bool verbose = defaultVerbose}) async {
   // Generate the category mapping for all Unicode code points.
@@ -102,22 +104,22 @@ Future<void> generateTables(File? output,
     await licenseFile.load(checkForUpdate: true);
   }
 
-  int lowChunkSize = defaultLowChunkSize;
-  int highChunkSize = defaultHighChunkSize;
+  var lowChunkSize = defaultLowChunkSize;
+  var highChunkSize = defaultHighChunkSize;
 
   int optimizeTable(
       IndirectTable chunkTable, int lowChunkSize, int highChunkSize) {
-    int index = 0;
+    var index = 0;
     do {
       chunkTable.entries.add(TableEntry(0, index, lowChunkSize));
       index += lowChunkSize;
     } while (index < 0x10000);
-    int lowChunkCount = chunkTable.entries.length;
+    var lowChunkCount = chunkTable.entries.length;
     do {
       chunkTable.entries.add(TableEntry(0, index, highChunkSize));
       index += highChunkSize;
     } while (index < 0x110000);
-    int highChunkCount = chunkTable.entries.length - lowChunkCount;
+    var highChunkCount = chunkTable.entries.length - lowChunkCount;
     assert(lowChunkCount * lowChunkSize + highChunkCount * highChunkSize ==
         0x110000);
     assert(chunkTable.chunks.length == 1);
@@ -135,7 +137,7 @@ Future<void> generateTables(File? output,
     assert(_validate(table, chunkTable, lowChunkSize, highChunkSize,
         verbose: false));
 
-    int size = chunkTable.chunks[0].length ~/ 2 + chunkTable.entries.length * 2;
+    var size = chunkTable.chunks[0].length ~/ 2 + chunkTable.entries.length * 2;
     return size;
   }
 
@@ -175,7 +177,7 @@ Future<void> generateTables(File? output,
     }
   }
 
-  // Write the table and automaton to souce.
+  // Write the table and automaton to source.
   var buffer = StringBuffer(copyright)
     ..writeln("// Generated code. Do not edit.")
     ..writeln("// Generated from [${graphemeBreakPropertyData.sourceLocation}]"
@@ -223,9 +225,9 @@ void _writeStringLiteral(StringSink out, String name, List<int> data,
   }
   var prefix = "const String $name = ";
   out.write(prefix);
-  var writer = StringLiteralWriter(out, padding: 4, escape: _escape);
+  var writer = StringLiteralWriter(out, padding: 4, escape: _needsEscape);
   writer.start(prefix.length);
-  for (int i = 0; i < data.length; i++) {
+  for (var i = 0; i < data.length; i++) {
     writer.add(data[i]);
   }
   writer.end();
@@ -239,11 +241,11 @@ void _writeNybbles(StringSink out, String name, List<int> data,
   }
   var prefix = "const String $name = ";
   out.write(prefix);
-  var writer = StringLiteralWriter(out, padding: 4, escape: _escape);
+  var writer = StringLiteralWriter(out, padding: 4, escape: _needsEscape);
   writer.start(prefix.length);
-  for (int i = 0; i < data.length - 1; i += 2) {
-    int n1 = data[i];
-    int n2 = data[i + 1];
+  for (var i = 0; i < data.length - 1; i += 2) {
+    var n1 = data[i];
+    var n2 = data[i + 1];
     assert(0 <= n1 && n1 <= 15);
     assert(0 <= n2 && n2 <= 15);
     writer.add(n1 + n2 * 16);
@@ -253,7 +255,7 @@ void _writeNybbles(StringSink out, String name, List<int> data,
   out.write(";\n");
 }
 
-bool _escape(int codeUnit) =>
+bool _needsEscape(int codeUnit) =>
     codeUnit > 0xff || codeUnit == 0x7f || codeUnit & 0x60 == 0;
 
 void _writeLookupFunction(
@@ -306,36 +308,36 @@ int $name(int lead, int tail) {
 bool _validate(Uint8List table, IndirectTable indirectTable, int lowChunkSize,
     int highChunkSize,
     {required bool verbose}) {
-  int lowChunkCount = 65536 ~/ lowChunkSize;
-  int lowChunkShift = lowChunkSize.bitLength - 1;
-  int lowChunkMask = lowChunkSize - 1;
-  for (int i = 0; i < 65536; i++) {
+  var lowChunkCount = 65536 ~/ lowChunkSize;
+  var lowChunkShift = lowChunkSize.bitLength - 1;
+  var lowChunkMask = lowChunkSize - 1;
+  for (var i = 0; i < 65536; i++) {
     var value = table[i];
-    int entryIndex = i >> lowChunkShift;
+    var entryIndex = i >> lowChunkShift;
     var entry = indirectTable.entries[entryIndex];
     var indirectValue = indirectTable.chunks[entry.chunkNumber]
         [entry.start + (i & lowChunkMask)];
     if (value != indirectValue) {
       stderr.writeln("$entryIndex: $entry");
-      stderr.writeln(
-          'Error: ${i.toRadixString(16)} -> Expected $value, was $indirectValue');
+      stderr.writeln('Error: ${i.toRadixString(16)} -> Expected $value,'
+          ' was $indirectValue');
       printIndirectTable(indirectTable);
       return false;
     }
   }
-  int highChunkShift = highChunkSize.bitLength - 1;
-  int highChunkMask = highChunkSize - 1;
-  for (int i = 0x10000; i < 0x110000; i++) {
+  var highChunkShift = highChunkSize.bitLength - 1;
+  var highChunkMask = highChunkSize - 1;
+  for (var i = 0x10000; i < 0x110000; i++) {
     var j = i - 0x10000;
     var value = table[i];
-    int entryIndex = lowChunkCount + (j >> highChunkShift);
+    var entryIndex = lowChunkCount + (j >> highChunkShift);
     var entry = indirectTable.entries[entryIndex];
     var indirectValue = indirectTable.chunks[entry.chunkNumber]
         [entry.start + (j & highChunkMask)];
     if (value != indirectValue) {
       stderr.writeln("$entryIndex: $entry");
-      stderr.writeln(
-          'Error: ${i.toRadixString(16)} -> Expected $value, was $indirectValue');
+      stderr.writeln('Error: ${i.toRadixString(16)} -> Expected $value,'
+          ' was $indirectValue');
       printIndirectTable(indirectTable);
       return false;
     }

@@ -2,6 +2,8 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
+// Very primitive arguments parser for the generator commands.
+
 import "dart:io";
 
 class Flags {
@@ -19,10 +21,10 @@ class Flags {
 
 Flags parseArgs(List<String> args, String toolName,
     {bool allowOptimize = false, bool allowFile = true}) {
-  bool update = false;
-  bool dryrun = false;
-  bool verbose = false;
-  bool optimize = false;
+  var update = false;
+  var dryrun = false;
+  var verbose = false;
+  var optimize = false;
   File? output;
   for (var arg in args) {
     if (arg == "-h" || arg == "--help") {
@@ -52,10 +54,10 @@ Flags parseArgs(List<String> args, String toolName,
     } else if (allowOptimize && arg == "-o" ||
         arg == "-i" ||
         arg.startsWith("--opt")) {
-      /// Try to find a better size for the table.
-      /// No need to do this unless the representation changes or
-      /// the input tables are updated.
-      /// The current value is optimal for the data and representation used.
+      // Try to find a better size for the table.
+      // No need to do this unless the representation changes or
+      // the input tables are updated.
+      // The current value is optimal for the data and representation used.
       optimize = true;
     } else if (arg.startsWith("-") || !allowFile) {
       stderr.writeln("Unrecognized flag: $arg");

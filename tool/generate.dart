@@ -6,8 +6,8 @@ import "dart:io" show File;
 
 import "bin/gentable.dart" show generateTables, tableFile;
 import "bin/gentest.dart" show generateTests, testFile;
-import "src/shared.dart";
 import "src/args.dart";
+import "src/shared.dart";
 
 /// Generates both tests and tables.
 ///
