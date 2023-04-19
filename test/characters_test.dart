@@ -235,7 +235,7 @@ void tests() {
 // Converts text with no multi-code-point grapheme clusters into
 // list of grapheme clusters.
 List<String> charsOf(String text) =>
-    text.runes.map((r) => String.fromCharCode(r)).toList();
+    text.runes.map(String.fromCharCode).toList();
 
 void expectGC(Characters actual, List<String> expected) {
   var text = expected.join();
