@@ -50,8 +50,8 @@ abstract class Characters implements Iterable<String> {
   /// of this [Characters].
   ///
   /// Allows iterating the characters of [string] backwards using
-  /// [CharacterRange.moveBack], as well as controlling the iteration in more
-  /// detail.
+  /// [CharacterRange.moveBack],
+  /// as well as controlling the iteration in more detail.
   CharacterRange get iteratorAtEnd;
 
   /// Whether [singleCharacterString] occurs in this
