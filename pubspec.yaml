@@ -10,3 +10,11 @@ environment:
 dev_dependencies:
   dart_flutter_team_lints: ^1.0.0
   test: ^1.16.0
+
+topics:
+ - strings
+ - unicode
+
+
+ 
+ 
