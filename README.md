@@ -1,3 +1,6 @@
+> [!IMPORTANT]  
+> This repo has moved to https://github.com/dart-lang/core/tree/main/pkgs/characters
+
 [![Build Status](https://github.com/dart-lang/characters/workflows/Dart%20CI/badge.svg)](https://github.com/dart-lang/characters/actions?query=workflow%3A"Dart+CI"+branch%3Amaster)
 [![pub package](https://img.shields.io/pub/v/characters.svg)](https://pub.dev/packages/characters)
 [![package publisher](https://img.shields.io/pub/publisher/characters.svg)](https://pub.dev/packages/characters/publisher)
